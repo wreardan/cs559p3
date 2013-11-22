@@ -55,7 +55,7 @@ void SceneInit()
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
 	//Create mesh
-	mesh.Initialize(360, 180);
+	mesh.Initialize(180, 180);
 }
 //SCENE END
 

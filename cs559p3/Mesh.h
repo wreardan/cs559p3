@@ -36,8 +36,6 @@ protected:
 	GLuint vaoNormalPositions;
 	GLuint vboNormalPositions;
 	cudaGraphicsResource* resNormalPositions;
-	GLuint vboNormalIndices;
-	cudaGraphicsResource* resNormalIndices;
 	GLuint numNormalPositions;
 //Material Properties (pass these to Fragment Shader)
 	glm::vec3 Ka, Ks, Kd;	//Lambertian Material properties: Ambient, Specular, Diffuse

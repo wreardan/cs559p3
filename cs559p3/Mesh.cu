@@ -289,8 +289,7 @@ void Mesh::CalculateNormals()
 }
 
 //This kernel creates a VBO of Positions that will draw Normal geometry lines
-__global__ void CreateNormalsVisualizationKernel(glm::vec3* positions, glm::vec3* normals, glm::vec3* normalPositions,
-												 unsigned int * normalIndices, unsigned int width)
+__global__ void CreateNormalsVisualizationKernel(glm::vec3* positions, glm::vec3* normals, glm::vec3* normalPositions, unsigned int width)
 {
 	const float normalScalar = 0.05f;
 
@@ -304,9 +303,6 @@ __global__ void CreateNormalsVisualizationKernel(glm::vec3* positions, glm::vec3
 
 	normalPositions[index] = position;
 	normalPositions[index+1] = position + normal*normalScalar;
-
-	normalIndices[index] = index;
-	normalIndices[index+1] = index+1;
 	
 #if __CUDA_ARCH__ >= 200
 	/*printf("(%d,%d): Positions: (%f,%f,%f) (%f,%f,%f)\n", x, y,
@@ -320,16 +316,13 @@ void Mesh::CreateNormalsVisualization()
 {
 	size_t num_bytes;
 	vec3* positions, *normals, *normalPositions;
-	unsigned int * normalIndices;
 
 	cudaGraphicsMapResources(1, &resPosition, 0);
 	cudaGraphicsMapResources(1, &resNormals, 0);
 	cudaGraphicsMapResources(1, &resNormalPositions, 0);
-	cudaGraphicsMapResources(1, &resNormalIndices, 0);
 	cudaGraphicsResourceGetMappedPointer((void **)&positions, &num_bytes, resPosition);
 	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
 	cudaGraphicsResourceGetMappedPointer((void **)&normalPositions, &num_bytes, resNormalPositions);
-	cudaGraphicsResourceGetMappedPointer((void **)&normalIndices, &num_bytes, resNormalIndices);
 	
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
@@ -340,9 +333,8 @@ void Mesh::CreateNormalsVisualization()
 	}
     dim3 grid(width / block.x, height / block.y, 1);
 
-	CreateNormalsVisualizationKernel<<< grid, block>>>(positions, normals, normalPositions, normalIndices, width);
+	CreateNormalsVisualizationKernel<<< grid, block>>>(positions, normals, normalPositions, width);
 	
-	cudaGraphicsUnmapResources(1, &resNormalIndices, 0);
 	cudaGraphicsUnmapResources(1, &resNormalPositions, 0);
 	cudaGraphicsUnmapResources(1, &resNormals, 0);
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
@@ -475,15 +467,6 @@ void Mesh::Initialize(int width, int height)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-//Create Normal Indices VBO
-	glGenBuffers(1, &vboNormalIndices);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboNormalIndices);
-	size_t bytesNormalIndices = numNormalPositions * sizeof(GLuint);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, bytesNormalIndices, 0, GL_STATIC_DRAW);
-	
-    cudaGraphicsGLRegisterBuffer(&resNormalIndices, vboNormalIndices, cudaGraphicsMapFlagsWriteDiscard);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);    //Unbind array element buffer
-
 	
 	//Create basic planar mesh and indices
 	//CreatePlanarMesh(width, height);
@@ -515,8 +498,7 @@ void Mesh::Draw()
 void Mesh::DrawNormals()
 {
 	glBindVertexArray(vaoNormalPositions);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboNormalIndices);
-	glDrawElements(GL_LINES, numNormalPositions, GL_UNSIGNED_INT, (GLvoid*)0);
+	glDrawArrays(GL_LINES, 0, numNormalPositions);
 	glBindVertexArray(0);
 }
 
