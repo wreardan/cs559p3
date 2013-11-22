@@ -19,7 +19,7 @@ protected:
 	int width, height;
 //Vertex Attributes
 	GLuint vao;
-
+//Vertex Positions
 	GLuint vboPosition;
 	cudaGraphicsResource* resPosition;
 	GLuint vboNormals;
