@@ -11,8 +11,8 @@
 
 # [Dd]ebug/
 # [Rr]elease/
-CS559Project3/[Dd]ebug/
-CS559Project3/[Rr]elease/
+cs559p3/[Dd]ebug/
+cs559p3/[Rr]elease/
 x64/
 build/
 [Bb]in/
