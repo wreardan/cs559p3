@@ -9,7 +9,7 @@
 #include <glm/glm.hpp>
 
 #ifndef GL_BAD_VALUE
-#define GL_BAD_VALUE (-1)
+#define GL_BAD_VALUE ((unsigned)-1)
 #endif
 
 class Mesh
@@ -33,8 +33,11 @@ protected:
 	cudaGraphicsResource* resWireframeIndices;
 	GLuint numWireframeIndices;
 	//Normal Visualization Vertices (glDrawArrays as GL_LINES) -> NOT YET IMPLEMENTED
+	GLuint vaoNormalPositions;
 	GLuint vboNormalPositions;
 	cudaGraphicsResource* resNormalPositions;
+	GLuint vboNormalIndices;
+	cudaGraphicsResource* resNormalIndices;
 	GLuint numNormalPositions;
 //Material Properties (pass these to Fragment Shader)
 	glm::vec3 Ka, Ks, Kd;	//Lambertian Material properties: Ambient, Specular, Diffuse
@@ -45,14 +48,18 @@ public:
 	~Mesh(void);
 
 	void CreatePlanarMesh(int width, int height);
-	void CreateSphereMesh(int width, int height);
-	void CreateIndices(int width, int height);
+	void CreateSphereMesh();
+	void CreateIndices();
+	void CreateWireframeIndices();
 	void CalculateNormals();
+	void CreateNormalsVisualization();
 
 	void Initialize(int width, int height);
 	void Draw();
+	void DrawNormals();
 	void TakeDown();
 
 	bool wireframeMode;
+	bool drawNormals;
 };
 

@@ -26,18 +26,23 @@ Mesh mesh;
 using namespace glm;
 
 GLSLProgram program;
-glm::mat4 ModelViewMatrix;
+glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
 void SceneDraw()
 {
-	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	program.use();
-	program.setUniform("MVP", ProjectionMatrix * ModelViewMatrix);
+	mat4 modelView = scale(ViewMatrix, vec3(3.0f));
+	program.setUniform("MVP", ProjectionMatrix * modelView);
 	program.setUniform("SolidColor", vec4(1.0f, 0.0f, 0.0f, 1.0f));
 
 	mesh.Draw();
+
+	program.setUniform("SolidColor", vec4(1.0f, 1.0f, 1.0f, 1.0f));
+	mesh.DrawNormals();
+
 }
 void SceneInit()
 {
@@ -46,11 +51,11 @@ void SceneInit()
 	assert(program.compileShaderFromFile("Shaders/solid.frag", GLSLShader::FRAGMENT));
 	assert(program.link());
 	assert(program.validate());
-	ModelViewMatrix = lookAt(vec3(2,2,5), vec3(0,0,0), vec3(0,1,0));
+	ViewMatrix = lookAt(vec3(-5.0f), vec3(0.0f), vec3(0,1,0));
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
-	//Create basic vao
-	mesh.Initialize(32, 32);
+	//Create mesh
+	mesh.Initialize(360, 180);
 }
 //SCENE END
 
@@ -62,6 +67,9 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 	case 'w':
 	case 'W':
 		mesh.wireframeMode = !mesh.wireframeMode;
+		break;
+	case 27:   //escape
+		glutLeaveMainLoop();
 		break;
 	}
 
