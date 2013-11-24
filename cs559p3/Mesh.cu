@@ -29,10 +29,10 @@ void Mesh::CreatePlanarMesh(int width, int height)
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
 	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
+	if(width % 8)
+		block.x = 1;
+	if(height % 8)
+		block.y = 1;
     dim3 grid(width / block.x, height / block.y, 1);
 
     FillPlanarMeshKernel<<< grid, block>>>(dptr, width, height);
@@ -75,11 +75,11 @@ void Mesh::CreateSphereMesh()
 	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
-	dim3 block(4, 4, 1);
-	if(width % 4 || height % 4)
-	{
-		block.x = 1; block.y = 1;
-	}
+	dim3 block(8, 8, 1);
+	if(width % 8)
+		block.x = 1;
+	if(height % 8)
+		block.y = 1;
     dim3 grid(width / block.x, height / block.y, 1);
 	
 
@@ -117,7 +117,6 @@ void Mesh::CreateIndices() {
 	size_t num_bytes;
 	cudaGraphicsResourceGetMappedPointer((void **)&ptrIndices, &num_bytes, resIndices);
 	
-    // execute the kernel - performance improvement when width and height are divisible by 8
 	dim3 block(1, 1, 1);
     dim3 grid(width-1, height-1, 1);
 
@@ -285,20 +284,16 @@ void Mesh::CalculateNormals()
 
 	//First, zero normals
 	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
+	if(width % 8)
+		block.x = 1;
+	if(height % 8)
+		block.y = 1;
     dim3 grid(width / block.x, height / block.y, 1);
 	ZeroBufferVec3<<< grid, block>>>(normals, width);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
 	//Second, generate averaged normals based on faces
-	block = dim3(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
+	block = dim3(1, 1, 1);	//doesn't work correctly with other block sizes right now
     grid = dim3((width-1)/block.x, (height-1)*2/block.y, 1);
 	CalculateNormalsKernel<<< grid, block>>>(positions, normals, indices, width-1);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
@@ -306,10 +301,10 @@ void Mesh::CalculateNormals()
 	
     //Lastly, Normalize
 	block = dim3(8,8,1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
+	if(width % 8)
+		block.x = 1;
+	if(height % 8)
+		block.y = 1;
     grid = dim3(width / block.x, height / block.y, 1);
 	NormalizeNormals<<< grid, block>>>(normals, width);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
@@ -359,10 +354,10 @@ void Mesh::CreateNormalsVisualization()
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
 	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
+	if(width % 8)
+		block.x = 1;
+	if(height % 8)
+		block.y = 1;
     dim3 grid(width / block.x, height / block.y, 1);
 
 	CreateNormalsVisualizationKernel<<< grid, block>>>(positions, normals, normalPositions, width);
