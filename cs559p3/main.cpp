@@ -51,11 +51,11 @@ void SceneInit()
 	assert(program.compileShaderFromFile("Shaders/solid.frag", GLSLShader::FRAGMENT));
 	assert(program.link());
 	assert(program.validate());
-	ViewMatrix = lookAt(vec3(-5.0f), vec3(0.0f), vec3(0,1,0));
+	ViewMatrix = lookAt(vec3(5.0f), vec3(0.0f), vec3(0,1,0));
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
 	//Create mesh
-	mesh.Initialize(180, 180);//>= 200 does not work for normal visualization, 65k vertices, or other issue??
+	mesh.Initialize(1000, 2000);//>= 200 does not work for normal visualization, 65k vertices, or other issue??
 }
 //SCENE END
 

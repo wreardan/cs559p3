@@ -1,9 +1,9 @@
 #include "Mesh.h"
 
 
-#define M_PI 3.14159265358979323846
-#define M_PI_2 1.57079632679489661923
-#define M_PI_4 0.785398163397448309616
+#define M_PI 3.14159265358979323846f
+#define M_PI_2 1.57079632679489661923f
+#define M_PI_4 0.785398163397448309616f
 
 using namespace glm;
 
@@ -36,6 +36,7 @@ void Mesh::CreatePlanarMesh(int width, int height)
     dim3 grid(width / block.x, height / block.y, 1);
 
     FillPlanarMeshKernel<<< grid, block>>>(dptr, width, height);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
@@ -48,12 +49,10 @@ __global__ void FillSphereMesh(float3 *pos, unsigned int width, unsigned int hei
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
 	float theta, phi;
-	float nx, ny, nz, s, t;
+	float nx, ny, nz;
 
 	theta = y * thetaFac;
-    s = y / (float)width;
 	phi = x * phiFac;
-    t = x / (float)height;
 
 	nx = sinf(phi) * cosf(theta);
 	ny = sinf(phi) * sinf(theta);
@@ -87,6 +86,7 @@ void Mesh::CreateSphereMesh()
 	GLfloat thetaFac = (2.0f * M_PI ) / (width-1);
 	GLfloat phiFac = M_PI  / (height-1);
     FillSphereMesh<<< grid, block>>>(dptr, width, height, thetaFac, phiFac);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
@@ -122,6 +122,7 @@ void Mesh::CreateIndices() {
     dim3 grid(width-1, height-1, 1);
 
 	FillIndicesKernel<<< grid, block>>>(ptrIndices, width, height);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resIndices, 0);
 }
@@ -165,6 +166,7 @@ void Mesh::CreateWireframeIndices() {
 	dim3 grid(width-1, height-1, 1);  //TODO: Fix this so that it uses (width, height) and then handles edge cases inside kernel
 
 	FillWireframeIndicesKernel<<< grid, block>>>(ptrWireframeIndices, width, height);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resWireframeIndices, 0);
 }
@@ -266,8 +268,8 @@ void Mesh::CalculateNormals()
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
 	//Second, generate averaged normals based on faces
-	block = dim3(1,1,1);
-    grid = dim3(numIndices / 3 / block.x, 1, 1);
+	block = dim3((width-1),1,1);
+    grid = dim3((height-1)*2, 1, 1);
 	CalculateNormalsKernel<<< grid, block>>>(positions, normals, indices);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
@@ -334,6 +336,7 @@ void Mesh::CreateNormalsVisualization()
     dim3 grid(width / block.x, height / block.y, 1);
 
 	CreateNormalsVisualizationKernel<<< grid, block>>>(positions, normals, normalPositions, width);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
 	cudaGraphicsUnmapResources(1, &resNormalPositions, 0);
 	cudaGraphicsUnmapResources(1, &resNormals, 0);
@@ -455,7 +458,7 @@ void Mesh::Initialize(int width, int height)
 //Create Normal Visualization VBO - do we need a VAO? yes
 	glGenBuffers(1, &vboNormalPositions);
 	glBindBuffer(GL_ARRAY_BUFFER, vboNormalPositions);
-	size_t bytesNormalPositions = sizeof(vec3(1.0f)) * width * height * 2;
+	size_t bytesNormalPositions = numNormalPositions * sizeof(vec3(1.0f));
 	glBufferData(GL_ARRAY_BUFFER, bytesNormalPositions, 0, GL_STATIC_DRAW);
 	
     cudaGraphicsGLRegisterBuffer(&resNormalPositions, vboNormalPositions, cudaGraphicsMapFlagsWriteDiscard);
@@ -469,15 +472,14 @@ void Mesh::Initialize(int width, int height)
 
 	
 	//Create basic planar mesh and indices
-	//CreatePlanarMesh(width, height);
-	CreateSphereMesh();
+	CreatePlanarMesh(width, height);
+	//CreateSphereMesh();
 
 	CreateIndices();
 	CreateWireframeIndices();
 
 	//some test fucntions:
 	CalculateNormals();
-	cudaDeviceSynchronize();	//http://stackoverflow.com/questions/15669841/cuda-hello-world-printf-not-working-even-with-arch-sm-20
 	CreateNormalsVisualization();
 }
 
