@@ -55,7 +55,7 @@ void SceneInit()
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
 	//Create mesh
-	mesh.Initialize(1000, 2000);//>= 200 does not work for normal visualization, 65k vertices, or other issue??
+	mesh.Initialize(2048, 2048);
 }
 //SCENE END
 

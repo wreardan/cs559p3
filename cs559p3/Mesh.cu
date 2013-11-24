@@ -135,21 +135,31 @@ __global__ void FillWireframeIndicesKernel(int* wireframeIndices, int width, int
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
 	//Fill Wireframe indices buffer
-	int wireframeOffset = (y*(width-1) + x) * 4;	//every index = 4 vertex indices (2 line segments)
+	int wireframeOffset = (y*(width) + x) * 4;	//every index = 4 vertex indices (2 line segments)
 	wireframeIndices[wireframeOffset++] = y * width + x;
 	wireframeIndices[wireframeOffset++] = y * width + (x+1);
 	wireframeIndices[wireframeOffset++] = y * width + x;
 	wireframeIndices[wireframeOffset++] = (y+1) * width + x;
 }
-__global__ void FillWireframeIndicesEdgeCasesKernel(int* wireframeIndices, int width, int height)
-{
+__global__ void FillWireframeIndicesEdgeCase1Kernel(int* wireframeIndices, int width, int height)
+{   //Handle the 'top' edge case
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
-    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+    unsigned int y = height-1;
 
 	//Fill Wireframe indices buffer
-	int wireframeOffset = (y*(width-1) + x) * 4;	//every index = 4 vertex indices (2 line segments)
+	int wireframeOffset = (y*(width) + x) * 4;	//every index = 4 vertex indices (2 line segments)
+
 	wireframeIndices[wireframeOffset++] = y * width + x;
 	wireframeIndices[wireframeOffset++] = y * width + (x+1);
+}
+__global__ void FillWireframeIndicesEdgeCase2Kernel(int* wireframeIndices, int width, int height)
+{   //Handle the 'right' edge case
+    unsigned int x = width-1;
+    unsigned int y = blockIdx.x*blockDim.x + threadIdx.x;	//use x instead of y for the index
+
+	//Fill Wireframe indices buffer
+	int wireframeOffset = (y*(width) + x) * 4;	//every index = 4 vertex indices (2 line segments)
+
 	wireframeIndices[wireframeOffset++] = y * width + x;
 	wireframeIndices[wireframeOffset++] = (y+1) * width + x;
 }
@@ -164,17 +174,29 @@ void Mesh::CreateWireframeIndices() {
     // execute the kernel - performance improvement when width and height are divisible by 8
 	dim3 block(1, 1, 1);
 	dim3 grid(width-1, height-1, 1);  //TODO: Fix this so that it uses (width, height) and then handles edge cases inside kernel
-
 	FillWireframeIndicesKernel<<< grid, block>>>(ptrWireframeIndices, width, height);
-	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+
+	//Handle edge cases
+	grid.y = 1;
+	FillWireframeIndicesEdgeCase1Kernel<<< grid, block>>>(ptrWireframeIndices, width, height);
+
+	grid.x = height-1;
+	FillWireframeIndicesEdgeCase2Kernel<<< grid, block>>>(ptrWireframeIndices, width, height);
+
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete, only need once since all kernels can be run in parallel
 
 	cudaGraphicsUnmapResources(1, &resWireframeIndices, 0);
 }
 
-//This kernel computes normals for the mesh
-__global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals, int* indices)
+//This kernel computes normals for the mesh by computing the cross product for each triangle, then adding that value to each vertex
+__global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals, int* indices, unsigned int width)
 {
-    unsigned int index = (blockIdx.x*blockDim.x + threadIdx.x) * 3;
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	unsigned int index = (y * width + x) * 3;
+
+    //unsigned int index = (blockIdx.x*blockDim.x + threadIdx.x) * 3;
 
 	
 
@@ -187,7 +209,7 @@ __global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals,
 	vec3 n = glm::cross(a,b);
 	if(length(n) > 0.0f)
 		n =  glm::normalize(n);
-	n = -n;
+	n = -n;		//why do we need this??
 
 #if __CUDA_ARCH__ >= 200
 
@@ -268,9 +290,13 @@ void Mesh::CalculateNormals()
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
 	//Second, generate averaged normals based on faces
-	block = dim3((width-1),1,1);
-    grid = dim3((height-1)*2, 1, 1);
-	CalculateNormalsKernel<<< grid, block>>>(positions, normals, indices);
+	block = dim3(8, 8, 1);
+	if(width % 8 || height % 8)
+	{
+		block.x = 1; block.y = 1;
+	}
+    grid = dim3((width-1)/block.x, (height-1)*2/block.y, 1);
+	CalculateNormalsKernel<<< grid, block>>>(positions, normals, indices, width-1);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	
@@ -398,7 +424,7 @@ void Mesh::Initialize(int width, int height)
 
 	//calculate the number of indices the Mesh will have
 	this->numIndices = (width-1) * (height-1) * 6;
-	this->numWireframeIndices = (width-1) * (height-1) * 4;
+	this->numWireframeIndices = (width) * (height) * 4;
 	this->numNormalPositions = width * height * 2;
 	
 	//Create VAO
