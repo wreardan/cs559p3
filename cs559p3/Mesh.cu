@@ -188,6 +188,36 @@ void Mesh::CreateWireframeIndices() {
 	cudaGraphicsUnmapResources(1, &resWireframeIndices, 0);
 }
 
+//Compute Level 1.1 atomicAdd workaround (slow)
+//https://www.sharcnet.ca/help/index.php/CUDA_tips_and_tricks
+__device__ inline void MyAtomicAdd (float *address, float value)
+ {
+   int oldval, newval, readback;
+ 
+   oldval = __float_as_int(*address);
+   newval = __float_as_int(__int_as_float(oldval) + value);
+   while ((readback=atomicCAS((int *)address, oldval, newval)) != oldval) 
+     {
+      oldval = readback;
+      newval = __float_as_int(__int_as_float(oldval) + value);
+     }
+ }
+
+//add b to a atomically
+__device__ inline void AtomicAddvec3(glm::vec3* a, glm::vec3* b)
+{
+#if __CUDA_ARCH__ >= 200
+	atomicAdd(&a->x, b->x);
+	atomicAdd(&a->y, b->y);
+	atomicAdd(&a->z, b->z);
+#else
+	MyAtomicAdd(&a->x, b->x);
+	MyAtomicAdd(&a->y, b->y);
+	MyAtomicAdd(&a->z, b->z);
+#endif
+}
+
+
 //This kernel computes normals for the mesh by computing the cross product for each triangle, then adding that value to each vertex
 __global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals, int* indices, unsigned int width)
 {
@@ -195,10 +225,6 @@ __global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals,
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
 	unsigned int index = (y * width + x) * 3;
-
-    //unsigned int index = (blockIdx.x*blockDim.x + threadIdx.x) * 3;
-
-	
 
 	const vec3 & p1 = positions[indices[index]];
 	const vec3 & p2 = positions[indices[index+1]];
@@ -211,33 +237,9 @@ __global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals,
 		n =  glm::normalize(n);
 	n = -n;		//why do we need this??
 
-#if __CUDA_ARCH__ >= 200
-
-	atomicAdd(&normals[indices[index]].x, n.x);
-	atomicAdd(&normals[indices[index]].y, n.y);
-	atomicAdd(&normals[indices[index]].z, n.z);
-
-	atomicAdd(&normals[indices[index+1]].x, n.x);
-	atomicAdd(&normals[indices[index+1]].y, n.y);
-	atomicAdd(&normals[indices[index+1]].z, n.z);
-
-	atomicAdd(&normals[indices[index+2]].x, n.x);
-	atomicAdd(&normals[indices[index+2]].y, n.y);
-	atomicAdd(&normals[indices[index+2]].z, n.z);
-//#else
-
-	
-	//normals[indices[index]] += n;  //Does this need to be atomic?  i.e. atomicAdd()? see above code for possible solution
-	//normals[indices[index+1]] += n;
-	//normals[indices[index+2]] += n;
-
-	/*printf("%d: (%f,%f,%f), (%f,%f,%f), (%f,%f,%f)\n", index/3,
-		normals[indices[index]].x, normals[indices[index]].y, normals[indices[index]].z,
-		normals[indices[index+1]].x, normals[indices[index+1]].y, normals[indices[index+1]].z,
-		normals[indices[index+2]].x, normals[indices[index+2]].y, normals[indices[index+2]].z);*/
-
-	//printf("Block (%d): Normal: (%f,%f,%f) ", index/3, n.x, n.y, n.z);
-#endif
+	AtomicAddvec3(&normals[indices[index]], &n);
+	AtomicAddvec3(&normals[indices[index+1]], &n);
+	AtomicAddvec3(&normals[indices[index+2]], &n);
 
 }
 
@@ -250,6 +252,8 @@ __global__ void NormalizeNormals(glm::vec3* normals, unsigned int width)
 
 	if(glm::length(normals[index]) > 0.0f)
 		normals[index] = glm::normalize(normals[index]);
+	else
+		normals[index] = vec3(0,0,-10);
 
 #if __CUDA_ARCH__ >= 200
 	//printf("(%d,%d): Normal: (%f,%f,%f)\n", x, y, normals[index].x, normals[index].y, normals[index].z);
