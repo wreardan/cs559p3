@@ -44,7 +44,8 @@ protected:
 public:
 	Mesh(void);
 	~Mesh(void);
-
+	
+	void CalculateBlockGridSize(dim3 & block, dim3 & grid, bool iterateFaces = false, bool heightDoubled = false);
 	void CreatePlanarMesh(int width, int height);
 	void CreateSphereMesh();
 	void CreateIndices();

@@ -5,7 +5,60 @@
 #define M_PI_2 1.57079632679489661923f
 #define M_PI_4 0.785398163397448309616f
 
+using namespace std;
 using namespace glm;
+
+//http://rosettacode.org/wiki/Factors_of_an_integer#C.2B.2B
+//we use factors to break problem into sub-problems
+int maxFactor(int n, int maxValue)
+{
+	for(int i = 2; i * i <= n; i++)
+		if(n % i == 0)
+			if(n / i < maxValue)
+				return n / i;
+	if(n > maxValue)
+		return 1;
+	return n;
+}
+void Mesh::CalculateBlockGridSize(dim3 & block, dim3 & grid, bool iterateFaces, bool heightDoubled)
+{
+	block = dim3(1, 1, 1);
+	if(iterateFaces)
+	{
+		block.x = maxFactor(width-1, 512);
+		block.y = maxFactor(height-1, 512/block.x);
+		grid = dim3((width-1)/block.x, (height-1)/block.y, 1);
+	}
+	else
+	{
+		block.x = maxFactor(width, 512);
+		block.y = maxFactor(height, 512/block.x);
+		grid = dim3(width/block.x, height/block.y, 1);
+	}
+	if(heightDoubled)
+		grid.y *= 2;
+}
+
+
+//http://stackoverflow.com/questions/14038589/what-is-the-canonical-way-to-check-for-errors-using-the-cuda-runtime-api
+#define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
+//http://stackoverflow.com/questions/4997013/cuda-kernels-consistently-returning-bad-results
+void CheckErrorCUDA()
+{
+	cudaError_t cudaResult;
+	cudaResult = cudaGetLastError();
+	if (cudaResult != cudaSuccess)
+		printf(cudaGetErrorString(cudaResult));
+}
 
 //This kernel fills the Planar Mesh's Vertex Positions
 __global__ void FillPlanarMeshKernel(float3 *pos, unsigned int width, unsigned int height)
@@ -22,18 +75,14 @@ __global__ void FillPlanarMeshKernel(float3 *pos, unsigned int width, unsigned i
 void Mesh::CreatePlanarMesh(int width, int height)
 {
 	float3* dptr;
+	dim3 block, grid;
 
 	cudaGraphicsMapResources(1, &resPosition, 0);
 	size_t num_bytes;
 	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
-	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
-    dim3 grid(width / block.x, height / block.y, 1);
+	CalculateBlockGridSize(block, grid);
 
     FillPlanarMeshKernel<<< grid, block>>>(dptr, width, height);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
@@ -69,19 +118,14 @@ __global__ void FillSphereMesh(float3 *pos, unsigned int width, unsigned int hei
 void Mesh::CreateSphereMesh()
 {
 	float3* dptr;
+	dim3 block, grid;
 
 	cudaGraphicsMapResources(1, &resPosition, 0);
 	size_t num_bytes;
 	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
-	dim3 block(4, 4, 1);
-	if(width % 4 || height % 4)
-	{
-		block.x = 1; block.y = 1;
-	}
-    dim3 grid(width / block.x, height / block.y, 1);
-	
+	CalculateBlockGridSize(block, grid);
 
 	GLfloat thetaFac = (2.0f * M_PI ) / (width-1);
 	GLfloat phiFac = M_PI  / (height-1);
@@ -112,14 +156,14 @@ __global__ void FillIndicesKernel(int* indices, int width, int height)
 
 void Mesh::CreateIndices() {
 	int* ptrIndices;
+	dim3 block, grid;
 
 	cudaGraphicsMapResources(1, &resIndices, 0);
 	size_t num_bytes;
 	cudaGraphicsResourceGetMappedPointer((void **)&ptrIndices, &num_bytes, resIndices);
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
-	dim3 block(1, 1, 1);
-    dim3 grid(width-1, height-1, 1);
+	CalculateBlockGridSize(block, grid, true);
 
 	FillIndicesKernel<<< grid, block>>>(ptrIndices, width, height);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
@@ -274,6 +318,7 @@ void Mesh::CalculateNormals()
 	size_t num_bytes;
 	int* indices;
 	vec3* positions, *normals;
+	dim3 block, grid;
 
 	//Map resources and get pointers
 	cudaGraphicsMapResources(1, &resIndices, 0);
@@ -284,33 +329,18 @@ void Mesh::CalculateNormals()
 	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
 
 	//First, zero normals
-	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
-    dim3 grid(width / block.x, height / block.y, 1);
+	CalculateBlockGridSize(block, grid);
 	ZeroBufferVec3<<< grid, block>>>(normals, width);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
 	//Second, generate averaged normals based on faces
-	block = dim3(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
-    grid = dim3((width-1)/block.x, (height-1)*2/block.y, 1);
+	CalculateBlockGridSize(block, grid, true, true);
 	CalculateNormalsKernel<<< grid, block>>>(positions, normals, indices, width-1);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
-
+	CheckErrorCUDA();
 	
     //Lastly, Normalize
-	block = dim3(8,8,1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
-    grid = dim3(width / block.x, height / block.y, 1);
+	CalculateBlockGridSize(block, grid);
 	NormalizeNormals<<< grid, block>>>(normals, width);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
@@ -348,6 +378,7 @@ void Mesh::CreateNormalsVisualization()
 {
 	size_t num_bytes;
 	vec3* positions, *normals, *normalPositions;
+	dim3 block, grid;
 
 	cudaGraphicsMapResources(1, &resPosition, 0);
 	cudaGraphicsMapResources(1, &resNormals, 0);
@@ -358,13 +389,7 @@ void Mesh::CreateNormalsVisualization()
 	
 	
     // execute the kernel - performance improvement when width and height are divisible by 8
-	dim3 block(8, 8, 1);
-	if(width % 8 || height % 8)
-	{
-		block.x = 1; block.y = 1;
-	}
-    dim3 grid(width / block.x, height / block.y, 1);
-
+	CalculateBlockGridSize(block, grid);
 	CreateNormalsVisualizationKernel<<< grid, block>>>(positions, normals, normalPositions, width);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	
@@ -372,11 +397,6 @@ void Mesh::CreateNormalsVisualization()
 	cudaGraphicsUnmapResources(1, &resNormals, 0);
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
-
-
-
-using namespace std;
-using namespace glm;
 
 //Initialize default values
 Mesh::Mesh(void)

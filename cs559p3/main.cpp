@@ -1,5 +1,6 @@
 /*
 	CS 559 Project 3
+	Fall 2013
 	(c) 2013 Wesley Reardan and Dustin Greene
 
  */
@@ -55,7 +56,7 @@ void SceneInit()
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
 	//Create mesh
-	mesh.Initialize(2048, 2048);
+	mesh.Initialize(64, 64);
 }
 //SCENE END
 
@@ -90,7 +91,7 @@ bool Initialize(int argc, char* argv[])
 	glutInit(&argc, argv);
 
 	glutInitWindowSize(window.size.x, window.size.y);
-	glutInitWindowPosition(window.size.x/2, 0);
+	glutInitWindowPosition(window.size.x/4, 0);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
 
 	window.handle = glutCreateWindow("CS 559 Project 3 - Wesley Reardan & Dustin Greene");
