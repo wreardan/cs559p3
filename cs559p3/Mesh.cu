@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <glm/gtx/spline.hpp>
 
 #define M_PI 3.14159265358979323846f
 #define M_PI_2 1.57079632679489661923f
@@ -131,6 +132,54 @@ void Mesh::CreateSphereMesh()
 	GLfloat phiFac = M_PI  / (height-1);
     FillSphereMesh<<< grid, block>>>(dptr, width, height, thetaFac, phiFac);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+}
+
+//This kernel fills the Ribbon Mesh's Vertex Positions
+__global__ void CreateRibbonKernel(vec3 *pos, unsigned int width, unsigned int height,
+								   float xFactor, float yFactor,
+								   vec3 v1, vec3 v2, vec3 v3, vec3 v4)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	float x_coord = x * xFactor;
+	float y_coord = y * yFactor;
+	
+	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
+	
+	pos[y * width + x] = vec3( (x_coord - spline.x)*2 - 1, y_coord*2 - 1 , 0.0f);
+
+//	pos[y * width + x] = vec3(x_coord - 1, y_coord - 1, 0.0f);
+}
+
+//Create a spline based ribbon mesh
+void Mesh::CreateRibbon()
+{
+	vec3* dptr;
+	dim3 block, grid;
+
+	//sample control points, where are we going to keep track of these
+	//what kind of data structure
+	vec3 v1 = vec3(1.0f, 0.0f, -2.0f);
+	vec3 v2 = vec3(0.0f, 0.0f, -1.0f);
+	vec3 v3 = vec3(0.0f, 0.0f, 1.0f);
+	vec3 v4 = vec3(1.0f, 0.0f, 2.0f);
+
+	cudaGraphicsMapResources(1, &resPosition, 0);
+	size_t num_bytes;
+	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
+	
+    // execute the kernel - performance improvement when width and height are divisible by 8
+	CalculateBlockGridSize(block, grid);
+
+	float xFactor = 1.0f / ((float)width - 1);
+	float yFactor = 1.0f / ((float)height - 1);
+    CreateRibbonKernel<<< grid, block>>>(dptr, width, height, xFactor, yFactor, 
+		v1, v2, v3, v4);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+	CheckErrorCUDA();
 
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
@@ -279,6 +328,8 @@ __global__ void CalculateNormalsKernel(glm::vec3* positions, glm::vec3* normals,
 	vec3 n = glm::cross(a,b);
 	if(length(n) > 0.0f)
 		n =  glm::normalize(n);
+	else
+		n = vec3(-10.0f);
 	n = -n;		//why do we need this??
 
 	AtomicAddvec3(&normals[indices[index]], &n);
@@ -522,8 +573,9 @@ void Mesh::Initialize(int width, int height)
 
 	
 	//Create basic planar mesh and indices
-	CreatePlanarMesh(width, height);
+	//CreatePlanarMesh(width, height);
 	//CreateSphereMesh();
+	CreateRibbon();
 
 	CreateIndices();
 	CreateWireframeIndices();

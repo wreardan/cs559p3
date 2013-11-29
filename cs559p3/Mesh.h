@@ -48,6 +48,7 @@ public:
 	void CalculateBlockGridSize(dim3 & block, dim3 & grid, bool iterateFaces = false, bool heightDoubled = false);
 	void CreatePlanarMesh(int width, int height);
 	void CreateSphereMesh();
+	void CreateRibbon();
 	void CreateIndices();
 	void CreateWireframeIndices();
 	void CalculateNormals();
