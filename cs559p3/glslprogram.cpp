@@ -149,6 +149,11 @@ void GLSLProgram::use()
     glUseProgram( handle );
 }
 
+void GLSLProgram::unuse()
+{
+    glUseProgram( 0 );
+}
+
 string GLSLProgram::log()
 {
     return logString;

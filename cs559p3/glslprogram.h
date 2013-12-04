@@ -42,6 +42,7 @@ public:
     bool   link();
     bool   validate();
     void   use();
+	void   unuse();
 	void   remove();
 
     string log();

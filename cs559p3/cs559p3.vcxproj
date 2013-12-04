@@ -94,7 +94,7 @@
 copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
     <CudaCompile>
-      <CodeGeneration>compute_11,sm_11</CodeGeneration>
+      <CodeGeneration>compute_20,sm_20</CodeGeneration>
     </CudaCompile>
     <CudaLink>
       <GPUDebugInfo>InheritFromProject</GPUDebugInfo>
@@ -160,16 +160,20 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Cam.cpp" />
     <ClCompile Include="glslprogram.cpp" />
     <ClCompile Include="main.cpp" />
     <CudaCompile Include="Mesh.cu">
       <FileType>CppCode</FileType>
     </CudaCompile>
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Cam.h" />
     <ClInclude Include="glslprogram.h" />
     <ClInclude Include="Mesh.h" />
+    <ClInclude Include="Object.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>

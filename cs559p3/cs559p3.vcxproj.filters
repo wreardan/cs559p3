@@ -10,6 +10,12 @@
     <ClCompile Include="Window.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Object.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Cam.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -30,6 +36,12 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="Mesh.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Object.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Cam.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>
