@@ -7,12 +7,13 @@ layout (location = 2) in vec2 VertexTexture;
 uniform mat4 MVP;
 uniform mat3 NormalMatrix;
 
-layout (location = 0) out vec3 Position;
-layout (location = 1) out vec3 Normal;
-layout (location = 2) out vec2 Texture;
+out vec3 Position;
+out vec3 Normal;
+out vec2 TextureCoord;
 
 void main(void) {
-    Position = vec3(MVP * vec4(VertexPosition, 1.0f) );
+	gl_Position = MVP * vec4(VertexPosition, 1.0);
+    Position = VertexPosition;
     Normal = NormalMatrix * VertexNormal;
-    Texture = VertexTexture;
+    TextureCoord = VertexTexture;
 }

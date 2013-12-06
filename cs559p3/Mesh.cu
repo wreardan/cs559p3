@@ -506,10 +506,10 @@ Mesh::Mesh(void)
 	numNormalPositions = 0;
 	resNormalPositions = NULL;
 
-	Ka = vec3(1.0f);
-	Ks = vec3(1.0f);
-	Kd = vec3(1.0f);
-	Shininess = 100.0f;
+	Ka = vec3(0.1f);
+	Kd = vec3(0.9f);
+	Ks = vec3(0.4f);
+	Shininess = 50.0f;
 
 	wireframeMode = false;
 	drawNormals = false;
@@ -629,10 +629,33 @@ void Mesh::Initialize(int width, int height)
 	CalculateNormals();
 	CreateNormalsVisualization();
 	CreateTextureCoords();
+
+	textures.push_back(ILContainer());
+	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
 }
 
-void Mesh::Draw()
+void Mesh::Draw(GLSLProgram & shader)
 {
+	//Set Material Properties
+	shader.setUniform("Material.Ka", Ka);
+	shader.setUniform("Material.Kd", Kd);
+	shader.setUniform("Material.Ks", Ks);
+	shader.setUniform("Material.Shininess", Shininess);
+
+	//Bind texture(s)
+	switch(textures.size()) //this switch statement uses fall-through purposefully
+	{
+	case 4: //bind ambient map, generate dynamically
+		textures[3].Bind(3);
+	case 3: //bind specular map
+		textures[2].Bind(2);
+	case 2: //bind normal map
+		textures[1].Bind(1);
+	case 1: //bind color map
+		textures[0].Bind(0);
+		shader.setUniform("ColorMap", 0);
+	}
+
 	glBindVertexArray(vao);
 	if(wireframeMode) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboWireframeIndices);

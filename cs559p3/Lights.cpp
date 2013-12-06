@@ -8,7 +8,7 @@ Light::Light(void)
 	this->intensity = vec3(1.0f);
 }
 
-Light::Light(vec4 pos)
+Light::Light(vec3 pos)
 {
 	this->position = pos;
 	this->intensity = vec3(1.0f);
@@ -20,12 +20,12 @@ glm::vec3 Lights::GetIntensity(int i)
 	return pos;
 }
 
-void Light::SetPosition(glm::vec4 & position)
+void Light::SetPosition(glm::vec3 & position)
 {
 	this->position = position;
 }
 
-glm::vec4 Light::GetPosition()
+glm::vec3 Light::GetPosition()
 {
 	return position;
 }
@@ -46,15 +46,15 @@ int Lights::count()
 	return this->lights.size();
 }
 
-glm::vec4 Lights::GetPosition(int i)
+glm::vec3 Lights::GetPosition(int i)
 {
-	vec4 pos = cameraMatrix * lights[i].GetPosition();
+	vec3 pos = vec3(cameraMatrix * vec4(lights[i].GetPosition(), 1.0f));
 	return pos;
 }
 
-glm::vec4 Lights::GetRawPosition(int i)
+glm::vec3 Lights::GetRawPosition(int i)
 {
-	vec4 pos = lights[i].GetPosition();
+	vec3 pos = lights[i].GetPosition();
 	return pos;
 }
 

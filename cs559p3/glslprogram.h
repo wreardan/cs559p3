@@ -44,6 +44,7 @@ public:
 	void   unuse();
 	void   remove();
 	
+	string getUniformBlockName(const string & uniformBlockName, const int index, const string & uniformName);
     int  getUniformLocation(const char * name );
     string log();
 

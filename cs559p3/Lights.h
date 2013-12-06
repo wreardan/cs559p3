@@ -6,13 +6,13 @@
 class Light
 {
 public:
-	glm::vec4 position;
+	glm::vec3 position;
 	glm::vec3 intensity;
 
 	Light(void);
-	Light(glm::vec4 pos);
-	void SetPosition(glm::vec4 & position);
-	glm::vec4 GetPosition();
+	Light(glm::vec3 pos);
+	void SetPosition(glm::vec3 & position);
+	glm::vec3 GetPosition();
 };
 
 class Lights
@@ -27,8 +27,8 @@ public:
 
 	int count();
 	glm::vec3 GetIntensity(int i);
-	glm::vec4 GetPosition(int i);
-	glm::vec4 GetRawPosition(int i);
+	glm::vec3 GetPosition(int i);
+	glm::vec3 GetRawPosition(int i);
 	glm::vec3 GetDirection(int i);
 	glm::vec3 GetRawDirection(int i);
 };

@@ -19,36 +19,28 @@ Object::~Object(void)
 {
 }
 
-void Object::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
+void Object::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lights)
 {
 	//Use Program
 	shader.use();
 	//Set uniforms
 	mat4 modelView = viewMatrix * worldMatrix;
-	mat3 normalMatrix = mat3(inverse(transpose(modelView)));
+	mat3 normalMatrix = inverse(transpose(mat3(viewMatrix)));
+	//Set Lights
+	for(int i = 0; i < lights.count(); i++) {
+		shader.setUniform(shader.getUniformBlockName("Light", i, "Position").c_str(), lights.GetRawPosition(i));
+		shader.setUniform(shader.getUniformBlockName("Light", i, "Intensity").c_str(), lights.GetIntensity(i));
+	}
 
 	/*shader.setUniform("ModelviewMatrix", modelView);
-	shader.setUniform("ProjectionMatrix", projectionMatrix);
-	shader.setUniform("NormalMatrix", normalMatrix);*/
+	shader.setUniform("ProjectionMatrix", projectionMatrix);*/
 	shader.setUniform("MVP", projectionMatrix * modelView);
+	shader.setUniform("NormalMatrix", normalMatrix);
 	//shader.setUniform("SolidColor", vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	//For each Mesh
 	for(int i = 0; i < (int)meshes.size(); i++) {
-		//Bind texture(s)
-		switch(textures.size()) //this switch statement uses fall-through purposefully
-		{
-		case 4: //bind ambient map, generate dynamically
-			textures[3].Bind(3);
-		case 3: //bind specular map
-			textures[2].Bind(2);
-		case 2: //bind normal map
-			textures[1].Bind(1);
-		case 1: //bind color map
-			textures[0].Bind(0);
-			shader.setUniform("ColorMap", 0);
-		}
 		//Draw Mesh
-		meshes[i].Draw();
+		meshes[i].Draw(shader);
 		//Draw Normals
 		//shader.setUniform("SolidColor", vec4(1.0f, 1.0f, 1.0f, 1.0f));
 		//meshes[i].DrawNormals();
@@ -67,12 +59,8 @@ void Object::Update(float deltaTime)
 
 void Object::Initialize()
 {
-	Mesh mesh;
-	mesh.Initialize(64, 64);
-	meshes.push_back(mesh);
-
-	textures.push_back(ILContainer());
-	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
+	meshes.push_back(Mesh());
+	meshes[0].Initialize(64, 64);
 }
 
 

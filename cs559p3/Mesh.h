@@ -2,11 +2,15 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
+#include "ilcontainer.h"
 
 #include <GL/glew.h>
 #include <cuda.h>
 #include <cuda_gl_interop.h>
 #include <glm/glm.hpp>
+#include <vector>
+
+#include "glslprogram.h"
 
 #ifndef GL_BAD_VALUE
 #define GL_BAD_VALUE ((unsigned)-1)
@@ -42,6 +46,8 @@ protected:
 //Material Properties (pass these to Fragment Shader)
 	glm::vec3 Ka, Ks, Kd;	//Lambertian Material properties: Ambient, Specular, Diffuse
 	float Shininess;
+public:
+	std::vector<ILContainer> textures;
 
 public:
 	Mesh(void);
@@ -58,7 +64,7 @@ public:
 	void CreateTextureCoords();
 
 	void Initialize(int width, int height);
-	void Draw();
+	void Draw(GLSLProgram & shader);
 	void DrawNormals();
 	void TakeDown();
 

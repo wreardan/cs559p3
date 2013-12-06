@@ -19,7 +19,7 @@
     <ClCompile Include="ilcontainer.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
+    <ClCompile Include="Lights.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -53,7 +53,7 @@
     <ClInclude Include="ilcontainer.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
+    <ClInclude Include="Lights.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>

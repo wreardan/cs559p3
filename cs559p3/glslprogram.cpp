@@ -343,6 +343,20 @@ bool GLSLProgram::validate()
     }
 }
 
+string GLSLProgram::getUniformBlockName(const string & uniformBlockName, const int index, const string & uniformName)
+{
+	string name;
+
+	name.append(uniformBlockName);
+	name.append("[");
+	name.append(std::to_string(index));
+	name.append("].");
+	name.append(uniformName);
+	
+	return name;
+}
+
+
 //https://github.com/wreardan/glslcookbook/blob/edition2/ingredients/glslprogram.cpp
 int GLSLProgram::getUniformLocation(const char * name )
 {

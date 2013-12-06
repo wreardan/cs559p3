@@ -34,15 +34,17 @@ Object object;
 using namespace glm;
 
 GLSLProgram program;
-glm::mat4 ViewMatrix;
 glm::mat4 ProjectionMatrix;
+Lights lights;
+
 void SceneDraw()
 {
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
-	object.Render(ViewMatrix, ProjectionMatrix);
+	lights.cameraMatrix = ViewMatrix;
+	object.Render(ViewMatrix, ProjectionMatrix, lights);
 
 	/*program.use();
 	mat4 modelView = scale(ViewMatrix, vec3(3.0f));
@@ -57,7 +59,8 @@ void SceneDraw()
 }
 void SceneInit()
 {
-	Object::InitializeShader("Shaders/Textured.vert", "Shaders/Textured.frag");
+	//Object::InitializeShader("Shaders/Textured.vert", "Shaders/Textured.frag");
+	Object::InitializeShader("Shaders/Phong.vert", "Shaders/Phong.frag");
 
 	//Compile Shader
 	/*assert(program.compileShaderFromFile("Shaders/solid.vert", GLSLShader::VERTEX));
@@ -71,6 +74,8 @@ void SceneInit()
 	/*mesh.Initialize(64, 64);*/
 
 	camera = Camera(vec3(0.0f, 0.0f, 10.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+	lights.Add(Light(vec3(1.0f, 1.0f, 1.0f)));
+	lights.Add(Light(vec3(-0.5f, -1.0f, 1.0f)));
 }
 //SCENE END
 
