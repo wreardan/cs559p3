@@ -185,6 +185,37 @@ void Mesh::CreateRibbon()
 }
 
 
+
+//This kernel fills the Planar Mesh's Vertex Positions
+__global__ void CreateTextureCoordsKernel(float2 *pos, unsigned int width, unsigned int height)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	float x_coord = x/((float)(width-1));
+	float y_coord = y/((float)(height-1));
+    pos[y*width+x] = make_float2(x_coord, y_coord);
+}
+
+
+void Mesh::CreateTextureCoords()
+{
+	float2* dptr;
+	dim3 block, grid;
+
+	cudaGraphicsMapResources(1, &resTextureCoords, 0);
+	size_t num_bytes;
+	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resTextureCoords);
+	
+    // execute the kernel with factored block and grid sizes
+	CalculateBlockGridSize(block, grid);
+
+    CreateTextureCoordsKernel<<< grid, block>>>(dptr, width, height);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+
+	cudaGraphicsUnmapResources(1, &resTextureCoords, 0);
+}
+
 //This kernel computes the indices for the triangles in the mesh. 
 __global__ void FillIndicesKernel(int* indices, int width, int height)
 {
@@ -460,6 +491,8 @@ Mesh::Mesh(void)
 	resPosition = NULL;
 	vboNormals = GL_BAD_VALUE;
 	resNormals = NULL;
+	vboTextureCoords = GL_BAD_VALUE;
+	resTextureCoords = NULL;
 
 	vboIndices = GL_BAD_VALUE;
 	numIndices = 0;
@@ -527,9 +560,21 @@ void Mesh::Initialize(int width, int height)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vec3(1.0f)), 0);
 	glEnableVertexAttribArray(1);
 
+//Create Texture VBO
+	glGenBuffers(1, &vboTextureCoords);
+	glBindBuffer(GL_ARRAY_BUFFER, vboTextureCoords);
+	size_t bytesTextureCoords = sizeof(vec2) * width * height;
+	glBufferData(GL_ARRAY_BUFFER, bytesTextureCoords, 0, GL_STATIC_DRAW);
+	
+    cudaGraphicsGLRegisterBuffer(&resTextureCoords, vboTextureCoords, cudaGraphicsMapFlagsWriteDiscard);
+	//Associate with Shader layout element 2, enable
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(vec2(1.0f)), 0);
+	glEnableVertexAttribArray(2);
+
 	//Unbind array buffer and vao
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
 
 
 //Create Indices VBO
@@ -583,6 +628,7 @@ void Mesh::Initialize(int width, int height)
 	//some test fucntions:
 	CalculateNormals();
 	CreateNormalsVisualization();
+	CreateTextureCoords();
 }
 
 void Mesh::Draw()

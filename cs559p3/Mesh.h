@@ -19,11 +19,13 @@ protected:
 	int width, height;
 //Vertex Attributes
 	GLuint vao;
-//Vertex Positions
+//Vertex Positions, Normals, TextureCoords
 	GLuint vboPosition;
 	cudaGraphicsResource* resPosition;
 	GLuint vboNormals;
 	cudaGraphicsResource* resNormals;
+	GLuint vboTextureCoords;
+	cudaGraphicsResource* resTextureCoords;
 //Vertex Indices
 	GLuint vboIndices;
 	cudaGraphicsResource* resIndices;
@@ -32,7 +34,7 @@ protected:
 	GLuint vboWireframeIndices;
 	cudaGraphicsResource* resWireframeIndices;
 	GLuint numWireframeIndices;
-	//Normal Visualization Vertices (glDrawArrays as GL_LINES) -> NOT YET IMPLEMENTED
+//Normal Visualization Vertices (glDrawArrays as GL_LINES)
 	GLuint vaoNormalPositions;
 	GLuint vboNormalPositions;
 	cudaGraphicsResource* resNormalPositions;
@@ -53,6 +55,7 @@ public:
 	void CreateWireframeIndices();
 	void CalculateNormals();
 	void CreateNormalsVisualization();
+	void CreateTextureCoords();
 
 	void Initialize(int width, int height);
 	void Draw();

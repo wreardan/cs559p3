@@ -31,7 +31,6 @@ private:
 
 	std::map<string, int> uniformLocations;
 
-    int  getUniformLocation(const char * name );
     bool fileExists( const string & fileName );
 
 public:
@@ -44,7 +43,8 @@ public:
     void   use();
 	void   unuse();
 	void   remove();
-
+	
+    int  getUniformLocation(const char * name );
     string log();
 
     int    getHandle();

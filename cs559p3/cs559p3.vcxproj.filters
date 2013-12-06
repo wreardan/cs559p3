@@ -16,6 +16,12 @@
     <ClCompile Include="Cam.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="ilcontainer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Light.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -44,12 +50,30 @@
     <ClInclude Include="Cam.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="ilcontainer.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Light.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\solid.frag">
       <Filter>Shaders</Filter>
     </None>
     <None Include="Shaders\solid.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Phong.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Phong.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Textured.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\Textured.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

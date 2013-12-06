@@ -8,6 +8,7 @@
 #include <iostream>
 #include <GL/glew.h>
 #include <GL/freeglut.h>
+#include <IL/il.h>
 
 using namespace std;
 
@@ -56,7 +57,7 @@ void SceneDraw()
 }
 void SceneInit()
 {
-	Object::InitializeShader("Shaders/solid.vert", "Shaders/solid.frag");
+	Object::InitializeShader("Shaders/Textured.vert", "Shaders/Textured.frag");
 
 	//Compile Shader
 	/*assert(program.compileShaderFromFile("Shaders/solid.vert", GLSLShader::VERTEX));
@@ -191,6 +192,8 @@ bool Initialize(int argc, char* argv[])
 		cerr << "Glew failed to initialize" << endl;
 		return false;
 	}
+
+	ilInit();
 
 	//Intialize Scene
 	SceneInit();

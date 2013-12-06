@@ -4,10 +4,12 @@
 #include <string>
 #include "Mesh.h"
 #include "glslprogram.h"
+#include "ilcontainer.h"
 class Object
 {
 protected:
 	std::vector<Mesh> meshes;
+	std::vector<ILContainer> textures;
 	static GLSLProgram shader;
 	
 	glm::vec3 pos, dir, up, scale;
