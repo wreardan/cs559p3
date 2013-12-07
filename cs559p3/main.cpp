@@ -21,8 +21,10 @@ Camera camera;
 //TESTING BEGIN
 #include "Mesh.h"
 #include "Object.h"
+#include "Ribbon.h"
 Mesh mesh;
 Object object;
+Ribbon ribbon;
 
 //Scene Code, seperate this into Scene Class eventually
 #include "glslprogram.h"
@@ -44,7 +46,9 @@ void SceneDraw()
 
 	mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
 	lights.cameraMatrix = ViewMatrix;
-	object.Render(ViewMatrix, ProjectionMatrix, lights);
+	mat4 modelView = translate(ViewMatrix, vec3(0.0f, -1.5f, 0.0f));
+	//object.Render(modelView, ProjectionMatrix, lights);
+	ribbon.Render(modelView, ProjectionMatrix, lights);
 
 	/*program.use();
 	mat4 modelView = scale(ViewMatrix, vec3(3.0f));
@@ -69,7 +73,8 @@ void SceneInit()
 	assert(program.validate());*/
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
-	object.Initialize();
+	//object.Initialize();
+	ribbon.Initialize();
 	//Create mesh
 	/*mesh.Initialize(64, 64);*/
 

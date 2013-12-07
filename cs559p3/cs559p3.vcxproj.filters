@@ -22,6 +22,7 @@
     <ClCompile Include="Lights.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Ribbon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -56,6 +57,7 @@
     <ClInclude Include="Lights.h">
       <Filter>Header</Filter>
     </ClInclude>
+    <ClInclude Include="Ribbon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\solid.frag">

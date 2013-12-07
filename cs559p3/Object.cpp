@@ -60,7 +60,22 @@ void Object::Update(float deltaTime)
 void Object::Initialize()
 {
 	meshes.push_back(Mesh());
-	meshes[0].Initialize(64, 64);
+	Mesh & mesh = meshes[meshes.size() - 1];
+	mesh.Initialize(64, 64);
+
+	vec3 v1 = vec3(1.0f, 0.0f, -2.0f);
+	vec3 v2 = vec3(0.0f, 0.5f, -1.0f);
+	vec3 v3 = vec3(0.0f, 1.0f, 1.0f);
+	vec3 v4 = vec3(1.0f, 1.5f, 2.0f);
+	mesh.CreateRibbon(v1,v2,v3,v4);
+
+	mesh.CreateIndices();
+	mesh.CreateWireframeIndices();
+
+	//some test fucntions:
+	mesh.CalculateNormals();
+	mesh.CreateNormalsVisualization();
+	mesh.CreateTextureCoords();
 }
 
 

@@ -19,11 +19,13 @@ struct MaterialInfo {
 uniform MaterialInfo Material;
 uniform sampler2D ColorMap;
 uniform sampler2D NormalMap;
+uniform sampler2D SpecularMap;
 
 layout(location = 0) out vec4 FragColor;
 
 vec3 phongModel( vec3 pos, vec3 norm ) {
     vec3 light_sum = vec3(0,0,0);
+	vec3 texSpec = texture2D(SpecularMap, TextureCoord).rgb;
     for(int i = 0; i < 8; i++) {
         vec3 s = normalize(Light[i].Position - pos);
         vec3 v = normalize(-pos.xyz);
@@ -33,7 +35,7 @@ vec3 phongModel( vec3 pos, vec3 norm ) {
         vec3 diffuse = Light[i].Intensity * Material.Kd * sDotN;
         vec3 spec = vec3(0.0);
         if( sDotN > 0.0 )
-            spec = Light[i].Intensity * Material.Ks *
+            spec = Light[i].Intensity * texSpec *
                    pow( max( dot(r,v), 0.0 ), Material.Shininess );
         light_sum += ambient + diffuse + spec;
     }

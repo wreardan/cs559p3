@@ -144,28 +144,21 @@ __global__ void CreateRibbonKernel(vec3 *pos, unsigned int width, unsigned int h
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
-	float x_coord = x * xFactor;
+	float x_coord = x * xFactor * 2 - 1;
 	float y_coord = y * yFactor;
-	
 	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
+	y_coord = yFactor * 2 - 1;
 	
-	pos[y * width + x] = vec3( (x_coord - spline.x)*2 - 1, y_coord*2 - 1 , 0.0f);
-
+	pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z + y_coord);
+//	pos[y * width + x] = vec3( (x_coord - spline.x)*2 - 1, y_coord*2 - 1 , 0.0f);
 //	pos[y * width + x] = vec3(x_coord - 1, y_coord - 1, 0.0f);
 }
 
 //Create a spline based ribbon mesh
-void Mesh::CreateRibbon()
+void Mesh::CreateRibbon(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4)
 {
 	vec3* dptr;
 	dim3 block, grid;
-
-	//sample control points, where are we going to keep track of these
-	//what kind of data structure
-	vec3 v1 = vec3(1.0f, 0.0f, -2.0f);
-	vec3 v2 = vec3(0.0f, 0.0f, -1.0f);
-	vec3 v3 = vec3(0.0f, 0.0f, 1.0f);
-	vec3 v4 = vec3(1.0f, 0.0f, 2.0f);
 
 	cudaGraphicsMapResources(1, &resPosition, 0);
 	size_t num_bytes;
@@ -620,7 +613,11 @@ void Mesh::Initialize(int width, int height)
 	//Create basic planar mesh and indices
 	//CreatePlanarMesh(width, height);
 	//CreateSphereMesh();
-	CreateRibbon();
+	/*vec3 v1 = vec3(1.0f, 0.0f, -2.0f);
+	vec3 v2 = vec3(0.0f, 0.5f, -1.0f);
+	vec3 v3 = vec3(0.0f, 1.0f, 1.0f);
+	vec3 v4 = vec3(1.0f, 1.5f, 2.0f);
+	CreateRibbon(v1,v2,v3,v4);
 
 	CreateIndices();
 	CreateWireframeIndices();
@@ -628,11 +625,12 @@ void Mesh::Initialize(int width, int height)
 	//some test fucntions:
 	CalculateNormals();
 	CreateNormalsVisualization();
-	CreateTextureCoords();
+	CreateTextureCoords();*/
 
-	textures.resize(2);
+	textures.resize(3);
 	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
 	textures[1].Initialize("Textures/hardwood_NRM.jpg");
+	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
 }
 
 void Mesh::Draw(GLSLProgram & shader)
@@ -640,7 +638,7 @@ void Mesh::Draw(GLSLProgram & shader)
 	//Set Material Properties
 	shader.setUniform("Material.Ka", Ka);
 	shader.setUniform("Material.Kd", Kd);
-	shader.setUniform("Material.Ks", Ks);
+	//shader.setUniform("Material.Ks", Ks);
 	shader.setUniform("Material.Shininess", Shininess);
 
 	//Bind texture(s)
@@ -649,18 +647,23 @@ void Mesh::Draw(GLSLProgram & shader)
 	}
 	shader.setUniform("ColorMap", 0);
 	//shader.setUniform("NormalMap", 1);
+	shader.setUniform("SpecularMap", 2);
 
 	glBindVertexArray(vao);
-	if(wireframeMode) {
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboWireframeIndices);
-		glDrawElements(GL_LINES, numWireframeIndices, GL_UNSIGNED_INT, (GLvoid*)0);
-	} else {
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndices);
-		glDrawElements(GL_TRIANGLES, numIndices*8/8, GL_UNSIGNED_INT, (GLvoid*)0);
-	}
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndices);
+	glDrawElements(GL_TRIANGLES, numIndices*8/8, GL_UNSIGNED_INT, (GLvoid*)0);
 	glBindVertexArray(0);
 
 }
+
+void Mesh::DrawWireframe(GLSLProgram & shader)
+{
+	glBindVertexArray(vao);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboWireframeIndices);
+		glDrawElements(GL_LINES, numWireframeIndices, GL_UNSIGNED_INT, (GLvoid*)0);
+	glBindVertexArray(0);
+}
+
 
 void Mesh::DrawNormals()
 {
