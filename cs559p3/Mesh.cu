@@ -626,11 +626,6 @@ void Mesh::Initialize(int width, int height)
 	CalculateNormals();
 	CreateNormalsVisualization();
 	CreateTextureCoords();*/
-
-	textures.resize(3);
-	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
-	textures[1].Initialize("Textures/hardwood_NRM.jpg");
-	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
 }
 
 void Mesh::Draw(GLSLProgram & shader)
@@ -643,7 +638,7 @@ void Mesh::Draw(GLSLProgram & shader)
 
 	//Bind texture(s)
 	for(int i = 0; i < textures.size()-1; i++) {
-		textures[i].Bind(i);
+		textures[i]->Bind(i);
 	}
 	shader.setUniform("ColorMap", 0);
 	//shader.setUniform("NormalMap", 1);

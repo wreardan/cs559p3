@@ -47,7 +47,7 @@ protected:
 	glm::vec3 Ka, Ks, Kd;	//Lambertian Material properties: Ambient, Specular, Diffuse
 	float Shininess;
 public:
-	std::vector<ILContainer> textures;
+	std::vector<ILContainer *> textures;
 
 public:
 	Mesh(void);

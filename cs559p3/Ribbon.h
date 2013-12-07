@@ -6,6 +6,7 @@ class Ribbon :
 {
 protected:
 	std::vector<glm::vec3> controlPoints;
+	std::vector<ILContainer> textures;
 
 public:
 	Ribbon(void);

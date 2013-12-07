@@ -15,6 +15,11 @@ Ribbon::Ribbon(void)
 
 void Ribbon::Initialize(void)
 {
+	textures.resize(3);
+	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
+	textures[1].Initialize("Textures/hardwood_NRM.jpg");
+	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
+
 	for(int i = 1; i < controlPoints.size() - 2; i++)
 	{
 		meshes.push_back(Mesh());
@@ -33,6 +38,10 @@ void Ribbon::Initialize(void)
 		mesh.CalculateNormals();
 		mesh.CreateNormalsVisualization();
 		mesh.CreateTextureCoords();
+
+		mesh.textures.push_back(&textures[0]);
+		mesh.textures.push_back(&textures[1]);
+		mesh.textures.push_back(&textures[2]);
 	}
 }
 

@@ -23,6 +23,7 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Ribbon.cpp" />
+    <ClCompile Include="Planet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -58,6 +59,7 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="Ribbon.h" />
+    <ClInclude Include="Planet.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\solid.frag">
