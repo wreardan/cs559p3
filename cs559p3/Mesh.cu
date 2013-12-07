@@ -147,9 +147,8 @@ __global__ void CreateRibbonKernel(vec3 *pos, unsigned int width, unsigned int h
 	float x_coord = x * xFactor * 2 - 1;
 	float y_coord = y * yFactor;
 	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
-	y_coord = yFactor * 2 - 1;
 	
-	pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z + y_coord);
+	pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z);
 //	pos[y * width + x] = vec3( (x_coord - spline.x)*2 - 1, y_coord*2 - 1 , 0.0f);
 //	pos[y * width + x] = vec3(x_coord - 1, y_coord - 1, 0.0f);
 }
@@ -170,6 +169,50 @@ void Mesh::CreateRibbon(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4)
 	float xFactor = 1.0f / ((float)width - 1);
 	float yFactor = 1.0f / ((float)height - 1);
     CreateRibbonKernel<<< grid, block>>>(dptr, width, height, xFactor, yFactor, 
+		v1, v2, v3, v4);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+	CheckErrorCUDA();
+
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+}
+
+//This kernel fills the Ribbon Mesh's Vertex Positions
+__global__ void CreateStaircaseKernel(vec3 *pos, unsigned int width, unsigned int height,
+								   float xFactor, float yFactor,
+								   vec3 v1, vec3 v2, vec3 v3, vec3 v4)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	float x_coord = x * xFactor * 2 - 1;
+	float y_coord = y * yFactor;
+	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
+	
+	if(y % 2) {
+		float y_coord2 = (y + 1) * yFactor;
+		vec3 spline2 = catmullRom(v1, v2, v3, v4, y_coord2);
+		pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline2.z);
+	}
+	else
+		pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z);
+}
+
+//Create a spline based ribbon mesh
+void Mesh::CreateStaircase(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4)
+{
+	vec3* dptr;
+	dim3 block, grid;
+
+	cudaGraphicsMapResources(1, &resPosition, 0);
+	size_t num_bytes;
+	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
+	
+    // execute the kernel - performance improvement when width and height are divisible by 8
+	CalculateBlockGridSize(block, grid);
+
+	float xFactor = 1.0f / ((float)width - 1);
+	float yFactor = 1.0f / ((float)height - 1);
+    CreateStaircaseKernel<<< grid, block>>>(dptr, width, height, xFactor, yFactor, 
 		v1, v2, v3, v4);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 	CheckErrorCUDA();

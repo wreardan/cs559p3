@@ -53,8 +53,8 @@ void SceneDraw()
 	lights.cameraMatrix = ViewMatrix;
 	mat4 modelView = translate(ViewMatrix, vec3(0.0f, -1.5f, 0.0f));
 	//object.Render(modelView, ProjectionMatrix, lights);
-	//ribbon.Render(modelView, ProjectionMatrix, lights);
-	planet.Render(ViewMatrix, ProjectionMatrix, lights);
+	ribbon.Render(modelView, ProjectionMatrix, lights);
+	//planet.Render(ViewMatrix, ProjectionMatrix, lights);
 
 	/*program.use();
 	mat4 modelView = scale(ViewMatrix, vec3(3.0f));
@@ -81,9 +81,9 @@ void SceneInit()
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 100.0f);
 
 	//object.Initialize();
-	//ribbon.Initialize();
-	planet.Initialize();
-	planet.LoadTexture("Textures/earthHiRes.jpg");
+	ribbon.Initialize();
+	/*planet.Initialize();
+	planet.LoadTexture("Textures/earthHiRes.jpg");*/
 	//Create mesh
 	/*mesh.Initialize(64, 64);*/
 

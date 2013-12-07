@@ -5,12 +5,12 @@ using namespace glm;
 
 Ribbon::Ribbon(void)
 {
-	controlPoints.push_back(vec3(1.0f, 0.0f, -2.0f));
-	controlPoints.push_back(vec3(0.0f, 0.5f, -1.0f));
-	controlPoints.push_back(vec3(0.0f, 1.0f, 1.0f));
-	controlPoints.push_back(vec3(1.0f, 1.5f, 2.0f));
-	controlPoints.push_back(vec3(2.0f, 2.0f, 3.0f));
-	controlPoints.push_back(vec3(3.0f, 2.5f, 4.0f));
+	controlPoints.push_back(vec3(0.0f, 0.0f, 4.0f));
+	controlPoints.push_back(vec3(0.0f, 0.5f, 3.0f));
+	controlPoints.push_back(vec3(0.0f, 1.0f, 2.0f));
+	controlPoints.push_back(vec3(0.0f, 1.5f, 1.0f));
+	controlPoints.push_back(vec3(0.0f, 2.0f, 0.0f));
+	controlPoints.push_back(vec3(0.0f, 2.5f, -1.0f));
 }
 
 void Ribbon::Initialize(void)
@@ -24,13 +24,14 @@ void Ribbon::Initialize(void)
 	{
 		meshes.push_back(Mesh());
 		Mesh & mesh = meshes[meshes.size() - 1];
-		mesh.Initialize(64, 64);
+		mesh.Initialize(16, 16);
 
 		vec3 v1 = controlPoints[i - 1];
 		vec3 v2 = controlPoints[i];
 		vec3 v3 = controlPoints[i + 1];
 		vec3 v4 = controlPoints[i + 2];
-		mesh.CreateRibbon(v1,v2,v3,v4);
+		//mesh.CreateRibbon(v1,v2,v3,v4);
+		mesh.CreateStaircase(v1,v2,v3,v4);
 
 		mesh.CreateIndices();
 		mesh.CreateWireframeIndices();
