@@ -648,7 +648,7 @@ void Mesh::Draw(GLSLProgram & shader)
 		textures[i].Bind(i);
 	}
 	shader.setUniform("ColorMap", 0);
-	shader.setUniform("NormalMap", 1);
+	//shader.setUniform("NormalMap", 1);
 
 	glBindVertexArray(vao);
 	if(wireframeMode) {
