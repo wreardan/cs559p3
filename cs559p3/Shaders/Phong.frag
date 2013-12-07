@@ -18,6 +18,7 @@ struct MaterialInfo {
 };
 uniform MaterialInfo Material;
 uniform sampler2D ColorMap;
+uniform sampler2D NormalMap;
 
 layout(location = 0) out vec4 FragColor;
 
@@ -40,7 +41,11 @@ vec3 phongModel( vec3 pos, vec3 norm ) {
 }
     	
 void main(void) {
-    vec3 phong = phongModel(Position, Normal);
+	vec3 norm = Normal;
+//	norm += texture2D(NormalMap, TextureCoord).rgb;
+	norm = normalize(norm);
+
+    vec3 phong = phongModel(Position, norm);
     vec4 t_color = texture2D(ColorMap, TextureCoord);
     FragColor = vec4(phong, 1.0) * t_color;
 }

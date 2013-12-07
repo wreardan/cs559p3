@@ -630,8 +630,9 @@ void Mesh::Initialize(int width, int height)
 	CreateNormalsVisualization();
 	CreateTextureCoords();
 
-	textures.push_back(ILContainer());
+	textures.resize(2);
 	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
+	textures[1].Initialize("Textures/hardwood_NRM.jpg");
 }
 
 void Mesh::Draw(GLSLProgram & shader)
@@ -643,18 +644,11 @@ void Mesh::Draw(GLSLProgram & shader)
 	shader.setUniform("Material.Shininess", Shininess);
 
 	//Bind texture(s)
-	switch(textures.size()) //this switch statement uses fall-through purposefully
-	{
-	case 4: //bind ambient map, generate dynamically
-		textures[3].Bind(3);
-	case 3: //bind specular map
-		textures[2].Bind(2);
-	case 2: //bind normal map
-		textures[1].Bind(1);
-	case 1: //bind color map
-		textures[0].Bind(0);
-		shader.setUniform("ColorMap", 0);
+	for(int i = 0; i < textures.size()-1; i++) {
+		textures[i].Bind(i);
 	}
+	shader.setUniform("ColorMap", 0);
+	shader.setUniform("NormalMap", 1);
 
 	glBindVertexArray(vao);
 	if(wireframeMode) {
