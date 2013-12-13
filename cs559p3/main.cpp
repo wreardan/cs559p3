@@ -14,7 +14,6 @@ using namespace std;
 
 #include "Window.h"
 #include "Cam.h"
-#include "fbo.h"
 Window window;
 
 Camera camera;
@@ -25,6 +24,8 @@ Camera camera;
 #include "Ribbon.h"
 #include "Planet.h"
 #include "Time.h"
+#include "fbo.h"
+#include "PostProcessing.h"
 
 Time timer;
 
@@ -33,9 +34,8 @@ Object object;
 Ribbon ribbon;
 vector<Planet> planets;
 Planet stars;
-FrameBufferObject fbo;
-Object framebufferDrawObject;
-GLuint framebufferSquareHandle, framebufferSquareVAO;
+
+PostProcessing postProcess;
 
 //Scene Code, seperate this into Scene Class eventually
 #include "glslprogram.h"
@@ -46,7 +46,7 @@ GLuint framebufferSquareHandle, framebufferSquareVAO;
 #include <assert.h>
 using namespace glm;
 
-GLSLProgram program, postProcessShader;
+GLSLProgram postProcessShader;
 glm::mat4 ProjectionMatrix;
 Lights lights;
 
@@ -107,33 +107,18 @@ void SceneInit()
 	Object::InitializeShader("Shaders/planet.vert", "Shaders/planet.frag");
 
 	//Compile Shader
-	/*assert(program.compileShaderFromFile("Shaders/solid.vert", GLSLShader::VERTEX));
-	assert(program.compileShaderFromFile("Shaders/solid.frag", GLSLShader::FRAGMENT));
-	assert(program.link());
-	assert(program.validate());*/
 	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 2000.0f);
 
 	//object.Initialize();
 	ribbon.Initialize();
-/*
-	planets.resize(7);
 	
-	planets[0].Initialize(0.766f, 10.0f, (float)( 105.0f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[1].Initialize(1.898f, 30.0f, (float)( 110.33f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[2].Initialize(0.5f, 40.0f, (float)( 128.57f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[3].Initialize(11.21f, 45.0f, (float)( .0f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[4].Initialize(9.42f, 30.0f, (float)( 2.0f * PI / 20.0f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[5].Initialize(4.818f, 30.0f, (float)( 2.0f * PI / 20.0f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	planets[6].Initialize(3.88f, 30.0f, (float)( 2.0f * PI / 20.0f ), (float)( 2.0f * PI / 10.0f ), "Textures/mercuryHiRes.jpg");
-	*/
+	//Planets
 	float distanceModifier = 7.0f;
 	float sizeModifier = 4.0f;
 	float orbitMod = 10.0f;
 	float sunSize = 100.0f;
-	//Planets
 	//Initialize planets
 	planets.resize(8);
-
 	//MERCURY
 	planets[MERCURY].Initialize(float(3.83f/sizeModifier * 2), float( 38.7/distanceModifier + sunSize), (float)( 2.0f * PI / (24.0f/orbitMod) ), (float)( 2.0f * PI / 10.0f ), "mercuryHiRes.jpg");
 	//VENUS
@@ -156,11 +141,6 @@ void SceneInit()
 	stars.isStar = true;
 	stars.Update(0.0f);
 
-	/*for(int i = 0; i < planets.size(); i++) {
-		planet.Initialize();
-		planet.LoadTexture("Textures/earthHiRes.jpg");
-	}*/
-
 	camera = Camera(vec3(0.0f, 0.0f, 180.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
 	lights.Add(Light(vec3(0.1f, 0.1f, 0.1f)));
 	//lights.Add(Light(vec3(-0.5f, -1.0f, 1.0f)));
@@ -171,43 +151,18 @@ void SceneInit()
 }
 //SCENE END
 
-void UseFramebufferToDrawSomething()
+void DisplayFunc()
 {
 	float time = float(glutGet(GLUT_ELAPSED_TIME)) / 1000.0f;
 
-	glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	postProcess.Bind();
 
-	glViewport(0, 0, window.size.x, window.size.y);
-	mat4 ViewMatrix = lookAt(vec3(0, 0, 5.5), vec3(0, 0, 0), vec3(0, 1, 0));
-	
-	postProcessShader.use();
-	vec2 windowSize = vec2(window.size.x, window.size.y);
-	postProcessShader.setUniform("size", windowSize);
-	postProcessShader.setUniform("ColorMap", (int)0);
-	
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, fbo.texture_handles[0]);
-	
-	glBindVertexArray(framebufferSquareVAO);
-	glDrawArrays(GL_QUADS, 0, 4);
-	glBindVertexArray(0);
-
-	postProcessShader.unuse();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
-}
-
-
-void DisplayFunc()
-{
-	fbo.Bind();
 	//Draw Scene
 	SceneDraw();
 
-	fbo.Unbind();
+	postProcess.UnBind();
 
-	UseFramebufferToDrawSomething();
+	postProcess.Draw(time);
 
 	glutPostRedisplay();
 	glutSwapBuffers();
@@ -254,6 +209,10 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 		}else {
 			timer.Stop();
 		}
+		break;
+	case 'o':
+	case 'O':
+		postProcess.ChangeEffect();
 		break;
 	case 27:   //escape
 		glutLeaveMainLoop();
@@ -348,52 +307,11 @@ bool Initialize(int argc, char* argv[])
 		return false;
 	}
 
-	ilInit();
+	ilInit();	//Initialize DevIL
 
 	
 	//Initialization for Framebuffer stuff
-
-	fbo.Initialize(window.size);
-
-	mesh.Initialize(64, 64);
-	mesh.CreatePlanarMesh(64, 64);
-	mesh.CreateIndices();
-	mesh.CalculateNormals();
-	mesh.CreateTextureCoords();
-	//mesh.textures.push_back(new ILContainer());
-	//mesh.textures[0]->il_texture_handle = fbo.texture_handles[0];
-	//mesh.textures[0]->il_handle = 1;
-	framebufferDrawObject.Initialize();
-	framebufferDrawObject.LoadTexture(fbo.texture_handles[0]);
-	
-	//Compile TextureOnly Shader
-	if(!postProcessShader.compileShaderFromFile("Shaders/PostProcess.vert", GLSLShader::VERTEX))
-		cerr << "Vertex Shader failed to compile: " << postProcessShader.log() << endl;
-	if(!postProcessShader.compileShaderFromFile("Shaders/PostProcess.frag", GLSLShader::FRAGMENT))
-		cerr << "Fragment Shader failed to compile: " << postProcessShader.log() << endl;
-	if(!postProcessShader.link())
-		cerr << "Shader Program failed to link: " << postProcessShader.log() << endl;
-	if(!postProcessShader.validate())
-		cerr << "Shader Program did not validate: " << postProcessShader.log() << endl;
-
-	
-	glGenVertexArrays(1, &framebufferSquareVAO);
-	glBindVertexArray(framebufferSquareVAO);
-
-	float square[] = {-1.0f,  1.0f,  // 0, Top Left
-          -1.0f, -1.0f,  // 1, Bottom Left
-           1.0f, -1.0f,  // 2, Bottom Right
-           1.0f,  1.0f,  // 3, Top Right
-	};
-	glGenBuffers(1, &framebufferSquareHandle);
-	glBindBuffer(GL_ARRAY_BUFFER, framebufferSquareHandle);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2(1.0f)) * 4, square, GL_STATIC_DRAW);
-
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2(1.0f)), 0);
-	glEnableVertexAttribArray(0);
-	
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	postProcess.Initialize(window.size);
 
 	//Intialize Scene
 	SceneInit();

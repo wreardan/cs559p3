@@ -34,6 +34,9 @@
     <ClCompile Include="fbo.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="PostProcessing.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -78,6 +81,9 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="fbo.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="PostProcessing.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>
