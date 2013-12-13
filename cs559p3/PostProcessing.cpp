@@ -55,6 +55,10 @@ void PostProcessing::Initialize(glm::ivec2 & windowSize)
 	//Get Subroutines
 	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "drawTextureOnly"));
 	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "drawPosterized"));
+	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "predatorVision"));
+	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "dreamVision"));
+	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "basicNoise"));
+	effectSubroutines.push_back(glGetSubroutineIndex(postProcessShader.getHandle(), GL_FRAGMENT_SHADER, "scanLinesChromatic"));
 }
 
 void PostProcessing::ChangeEffect()
@@ -86,7 +90,7 @@ void PostProcessing::Draw(float time)
 	
 	postProcessShader.use();
 	//Change Subroutine
-	glUniformSubroutinesuiv(GL_VERTEX_SHADER, 1, &effectSubroutines[currentEffect]);
+	glUniformSubroutinesuiv(GL_FRAGMENT_SHADER, 1, &effectSubroutines[currentEffect]);
 
 	vec2 windowSizeFloat = vec2(windowSize.x, windowSize.y);
 	postProcessShader.setUniform("size", windowSizeFloat);
