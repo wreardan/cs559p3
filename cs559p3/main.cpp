@@ -35,6 +35,7 @@ vector<Planet> planets;
 Planet stars;
 FrameBufferObject fbo;
 Object framebufferDrawObject;
+GLuint framebufferSquareHandle, framebufferSquareVAO;
 
 //Scene Code, seperate this into Scene Class eventually
 #include "glslprogram.h"
@@ -45,7 +46,7 @@ Object framebufferDrawObject;
 #include <assert.h>
 using namespace glm;
 
-GLSLProgram program, textureOnlyShader, postProcessShader;
+GLSLProgram program, postProcessShader;
 glm::mat4 ProjectionMatrix;
 Lights lights;
 
@@ -170,21 +171,6 @@ void SceneInit()
 }
 //SCENE END
 
-void DrawFramebuffer()
-{
-	//OpenGL calls
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	mat4 ViewMatrix = mat4(1.0f);	//lookAt(camera.camPosition, camera.camTarget, camera.camUp);
-	framebufferDrawObject.Render(ViewMatrix, ProjectionMatrix, lights);
-	
-	glDisable(GL_DEPTH_TEST);
-}
-
 void UseFramebufferToDrawSomething()
 {
 	float time = float(glutGet(GLUT_ELAPSED_TIME)) / 1000.0f;
@@ -192,28 +178,26 @@ void UseFramebufferToDrawSomething()
 	glClearColor(0.2f, 0.2f, 0.2f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	gluPerspective(15, double(window.size.x) / double(window.size.y), 1, 10);
 	glViewport(0, 0, window.size.x, window.size.y);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-	gluLookAt(0, 0, 5.5, 0, 0, 0, 0, 1, 0);
+	mat4 ViewMatrix = lookAt(vec3(0, 0, 5.5), vec3(0, 0, 0), vec3(0, 1, 0));
+	
+	postProcessShader.use();
+	vec2 windowSize = vec2(window.size.x, window.size.y);
+	postProcessShader.setUniform("size", windowSize);
+	postProcessShader.setUniform("ColorMap", (int)0);
+	
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, fbo.texture_handles[0]);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex2f(-0.5f, -0.5f);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex2f(0.5f, -0.5f);
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex2f(0.5f, 0.5f);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex2f(-0.5f, 0.5f);
-	glEnd();
+	
+	glBindVertexArray(framebufferSquareVAO);
+	glDrawArrays(GL_QUADS, 0, 4);
+	glBindVertexArray(0);
+
+	postProcessShader.unuse();
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 }
+
 
 void DisplayFunc()
 {
@@ -223,7 +207,6 @@ void DisplayFunc()
 
 	fbo.Unbind();
 
-	//DrawFramebuffer();
 	UseFramebufferToDrawSomething();
 
 	glutPostRedisplay();
@@ -384,21 +367,33 @@ bool Initialize(int argc, char* argv[])
 	framebufferDrawObject.LoadTexture(fbo.texture_handles[0]);
 	
 	//Compile TextureOnly Shader
-	if(!textureOnlyShader.compileShaderFromFile("Shaders/PostProcess.vert", GLSLShader::VERTEX))
-		cerr << "Vertex Shader failed to compile: " << textureOnlyShader.log() << endl;
-	if(!textureOnlyShader.compileShaderFromFile("Shaders/PostProcess.frag", GLSLShader::FRAGMENT))
-		cerr << "Fragment Shader failed to compile: " << textureOnlyShader.log() << endl;
-	if(!textureOnlyShader.link())
-		cerr << "Shader Program failed to link: " << textureOnlyShader.log() << endl;
-	if(!textureOnlyShader.validate())
-		cerr << "Shader Program did not validate: " << textureOnlyShader.log() << endl;
+	if(!postProcessShader.compileShaderFromFile("Shaders/PostProcess.vert", GLSLShader::VERTEX))
+		cerr << "Vertex Shader failed to compile: " << postProcessShader.log() << endl;
+	if(!postProcessShader.compileShaderFromFile("Shaders/PostProcess.frag", GLSLShader::FRAGMENT))
+		cerr << "Fragment Shader failed to compile: " << postProcessShader.log() << endl;
+	if(!postProcessShader.link())
+		cerr << "Shader Program failed to link: " << postProcessShader.log() << endl;
+	if(!postProcessShader.validate())
+		cerr << "Shader Program did not validate: " << postProcessShader.log() << endl;
+
+	
+	glGenVertexArrays(1, &framebufferSquareVAO);
+	glBindVertexArray(framebufferSquareVAO);
 
 	float square[] = {-1.0f,  1.0f,  // 0, Top Left
           -1.0f, -1.0f,  // 1, Bottom Left
            1.0f, -1.0f,  // 2, Bottom Right
            1.0f,  1.0f,  // 3, Top Right
 	};
-	//glGenBuffers(1, &
+	glGenBuffers(1, &framebufferSquareHandle);
+	glBindBuffer(GL_ARRAY_BUFFER, framebufferSquareHandle);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vec2(1.0f)) * 4, square, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(vec2(1.0f)), 0);
+	glEnableVertexAttribArray(0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 	//Intialize Scene
 	SceneInit();
