@@ -161,6 +161,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cam.cpp" />
+    <ClCompile Include="fbo.cpp" />
     <ClCompile Include="glslprogram.cpp" />
     <ClCompile Include="ilcontainer.cpp" />
     <ClCompile Include="Lights.cpp" />
@@ -171,10 +172,12 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="Ribbon.cpp" />
+    <ClCompile Include="Time.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cam.h" />
+    <ClInclude Include="fbo.h" />
     <ClInclude Include="glslprogram.h" />
     <ClInclude Include="ilcontainer.h" />
     <ClInclude Include="Lights.h" />
@@ -182,15 +185,20 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="Object.h" />
     <ClInclude Include="Planet.h" />
     <ClInclude Include="Ribbon.h" />
+    <ClInclude Include="Time.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Phong.frag" />
     <None Include="Shaders\Phong.vert" />
+    <None Include="Shaders\planet.frag" />
+    <None Include="Shaders\planet.vert" />
+    <None Include="Shaders\PostProcess.frag" />
+    <None Include="Shaders\PostProcess.vert" />
     <None Include="Shaders\solid.frag" />
     <None Include="Shaders\solid.vert" />
-    <None Include="Shaders\Textured.frag" />
-    <None Include="Shaders\Textured.vert" />
+    <None Include="Shaders\TextureOnly.frag" />
+    <None Include="Shaders\TextureOnly.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

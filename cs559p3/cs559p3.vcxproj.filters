@@ -22,8 +22,18 @@
     <ClCompile Include="Lights.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Ribbon.cpp" />
-    <ClCompile Include="Planet.cpp" />
+    <ClCompile Include="Planet.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Ribbon.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="fbo.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -58,8 +68,18 @@
     <ClInclude Include="Lights.h">
       <Filter>Header</Filter>
     </ClInclude>
-    <ClInclude Include="Ribbon.h" />
-    <ClInclude Include="Planet.h" />
+    <ClInclude Include="Planet.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Ribbon.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="fbo.h">
+      <Filter>Header</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\solid.frag">
@@ -74,10 +94,22 @@
     <None Include="Shaders\Phong.vert">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Textured.frag">
+    <None Include="Shaders\planet.frag">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="Shaders\Textured.vert">
+    <None Include="Shaders\planet.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\TextureOnly.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\TextureOnly.vert">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\PostProcess.frag">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Shaders\PostProcess.vert">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

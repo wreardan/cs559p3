@@ -56,6 +56,7 @@ public:
 	void CalculateBlockGridSize(dim3 & block, dim3 & grid, bool iterateFaces = false, bool heightDoubled = false);
 	void CreatePlanarMesh(int width, int height);
 	void CreateSphereMesh();
+	void FixSphereEdgeCases();
 	void CreateRibbon(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4);
 	void CreateStaircase(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4);
 	void CreateIndices();

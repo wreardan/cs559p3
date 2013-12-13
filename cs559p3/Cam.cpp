@@ -28,7 +28,7 @@ Camera::Camera(glm::vec3 pos, glm::vec3 target, glm::vec3 up) {
 	rightDirection = glm::vec3(1.0f, 0.0f, 0.0f);
 	upDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	movementScalar = 0.5f;
+	movementScalar = 2.0f;
 
 	//init to (0, 0, -1)
 	theta = (float)(PI / 2);
@@ -112,12 +112,12 @@ void Camera::TurnLeft() {
 }
 
 void Camera::MoveUp() {
-	camPosition = camPosition + (1.0f * glm::vec3(0.0f, 1.0f, 0.0f) );
+	camPosition = camPosition + (movementScalar * glm::vec3(0.0f, 1.0f, 0.0f) );
 	camTarget = camPosition + forwardDirection;
 }
 
 void Camera::MoveDown() {
-	camPosition = camPosition + (1.0f * glm::vec3(0.0f, -1.0f, 0.0f) );
+	camPosition = camPosition + (movementScalar * glm::vec3(0.0f, -1.0f, 0.0f) );
 	camTarget = camPosition + forwardDirection;
 }
 

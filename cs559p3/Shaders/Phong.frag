@@ -3,6 +3,7 @@
 in vec3 Position;
 in vec3 Normal;
 in vec2 TextureCoord;
+in vec3 WorldPosition;
 
 struct LightInfo {
   vec3 Position;  // Light position in eye coords.
@@ -26,9 +27,11 @@ layout(location = 0) out vec4 FragColor;
 vec3 phongModel( vec3 pos, vec3 norm ) {
     vec3 light_sum = vec3(0,0,0);
 	vec3 texSpec = texture2D(SpecularMap, TextureCoord).rgb;
+	//vec3 texSpec = Material.Ks;
     for(int i = 0; i < 8; i++) {
         vec3 s = normalize(Light[i].Position - pos);
-        vec3 v = normalize(-pos.xyz);
+        //vec3 v = normalize(-pos.xyz);
+		vec3 v = normalize( -Position );
         vec3 r = reflect( -s, norm );
         vec3 ambient = Light[i].Intensity * Material.Ka;
         float sDotN = max( dot(s,norm), 0.0 );
@@ -43,11 +46,8 @@ vec3 phongModel( vec3 pos, vec3 norm ) {
 }
     	
 void main(void) {
-	vec3 norm = Normal;
-//	norm += texture2D(NormalMap, TextureCoord).rgb;
-	norm = normalize(norm);
 
-    vec3 phong = phongModel(Position, norm);
+    vec3 phong = phongModel(WorldPosition, Normal);
     vec4 t_color = texture2D(ColorMap, TextureCoord);
     FragColor = vec4(phong, 1.0) * t_color;
 }

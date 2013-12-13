@@ -104,9 +104,9 @@ __global__ void FillSphereMesh(float3 *pos, unsigned int width, unsigned int hei
 	theta = y * thetaFac;
 	phi = x * phiFac;
 
-	nx = sinf(phi) * cosf(theta);
-	ny = sinf(phi) * sinf(theta);
-	nz = cosf(phi);
+	nx = sinf(theta) * cosf(phi);
+	ny = cosf(theta);
+	nz = sinf(theta) * sinf(phi);
 
     pos[y*width+x] = make_float3(nx, ny, nz);
 
@@ -128,13 +128,77 @@ void Mesh::CreateSphereMesh()
     // execute the kernel - performance improvement when width and height are divisible by 8
 	CalculateBlockGridSize(block, grid);
 
-	GLfloat thetaFac = (2.0f * M_PI ) / (width-1);
-	GLfloat phiFac = M_PI  / (height-1);
+	GLfloat thetaFac = (M_PI ) / (height-1);
+	GLfloat phiFac = (2 * M_PI)  / (width-1);
     FillSphereMesh<<< grid, block>>>(dptr, width, height, thetaFac, phiFac);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
+
+/*__global__ void SphereEdgeCaseNormalsKernel(float3 *normals, unsigned int width, unsigned int height)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+	
+    normals[0*width+x] = make_float3(0, 1, 0);
+    normals[(height-1)*width+x] = make_float3(0, -1, 0);
+}
+
+void Mesh::FixSphereEdgeCases()
+{
+	size_t num_bytes;
+	float3 *normals;
+	dim3 block, grid;
+
+	//Map resources and get pointers
+	cudaGraphicsMapResources(1, &resNormals, 0);
+	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
+	
+    //Lastly, Normalize
+	grid = dim3(width, 1, 1);
+	block = dim3(1, 1, 1);
+	SphereEdgeCaseNormalsKernel<<< grid, block>>>(normals, width, height);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+
+	//Unmap Resources
+	cudaGraphicsUnmapResources(1, &resNormals, 0);
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+	cudaGraphicsUnmapResources(1, &resIndices, 0);
+}*/
+__global__ void SphereEdgeCaseNormalsKernel(glm::vec3* positions, glm::vec3* normals, unsigned int width)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+	
+    normals[y*width+x] = normalize(positions[y*width+x]);
+}
+
+
+void Mesh::FixSphereEdgeCases()
+{
+	size_t num_bytes;
+	int* indices;
+	vec3* positions, *normals;
+	dim3 block, grid;
+
+	//Map resources and get pointers
+	cudaGraphicsMapResources(1, &resPosition, 0);
+	cudaGraphicsResourceGetMappedPointer((void **)&positions, &num_bytes, resPosition);
+	cudaGraphicsMapResources(1, &resNormals, 0);
+	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
+	
+	//Set sphere normals equal to positions
+	CalculateBlockGridSize(block, grid);
+	SphereEdgeCaseNormalsKernel<<< grid, block>>>(positions, normals, width);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+	CheckErrorCUDA();
+
+	//Unmap Resources
+	cudaGraphicsUnmapResources(1, &resNormals, 0);
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+}
+
+
 
 //This kernel fills the Ribbon Mesh's Vertex Positions
 __global__ void CreateRibbonKernel(vec3 *pos, unsigned int width, unsigned int height,
@@ -186,15 +250,19 @@ __global__ void CreateStaircaseKernel(vec3 *pos, unsigned int width, unsigned in
 
 	float x_coord = x * xFactor * 2 - 1;
 	float y_coord = y * yFactor;
-	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
 	
-	if(y % 2) {
+	if( ( (y + 1) / 2) % 2) {
+	//if( y % 2) {
+		float y_coord1 = (y - 1) * yFactor;
+		vec3 spline1 = catmullRom(v1, v2, v3, v4, y_coord1);
 		float y_coord2 = (y + 1) * yFactor;
 		vec3 spline2 = catmullRom(v1, v2, v3, v4, y_coord2);
-		pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline2.z);
+		pos[y * width + x] = vec3( spline1.x + x_coord, spline1.y, spline2.z);
 	}
-	else
+	else {
+		vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
 		pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z);
+	}
 }
 
 //Create a spline based ribbon mesh
@@ -680,7 +748,7 @@ void Mesh::Draw(GLSLProgram & shader)
 	shader.setUniform("Material.Shininess", Shininess);
 
 	//Bind texture(s)
-	for(int i = 0; i < textures.size()-1; i++) {
+	for(int i = 0; i < textures.size(); i++) {
 		textures[i]->Bind(i);
 	}
 	shader.setUniform("ColorMap", 0);
