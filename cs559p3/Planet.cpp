@@ -17,6 +17,23 @@ Planet::~Planet(void)
 {
 }
 
+
+void Planet::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lights)
+{
+	glDisable(GL_CULL_FACE);
+	//Draw planet
+	super::Render(viewMatrix, projectionMatrix, lights);
+
+	//Draw Ribbon
+	
+	mat4 world = translate(mat4(1.0f), planetPosition);
+	//world = glm::scale(world, vec3(radius * 1.1f));
+	planetRibbon.SetWorldMatrix(world);
+	planetRibbon.wireframeMode = wireframeMode;
+	planetRibbon.Render(viewMatrix, projectionMatrix, lights);
+}
+
+
 void Planet::Initialize(float radius, float orbitRadius, float orbitSpeed, float rotationSpeed, std::string textureFile)
 {
 	
@@ -47,6 +64,10 @@ void Planet::Initialize(float radius, float orbitRadius, float orbitSpeed, float
 
 	LoadTexture("Textures/" + textureFile);
 	name = textureFile;
+
+	//Initialize planet's ribbon
+	planetRibbon.CreateCircularRibbonControlPoints(this->radius + 10.0f, 20);
+	planetRibbon.Initialize();
 }
 
 
@@ -100,4 +121,15 @@ void Planet::LoadTexture(std::string fileName)
 	mesh.textures.resize(1);
 	mesh.textures[0] = new ILContainer();
 	mesh.textures[0]->Initialize(fileName.c_str());
+}
+glm::vec3 Planet::getRibbonPosition(float time)
+{
+	/*mat4 matrix = planetRibbon.GetCameraMatrix(time);
+	matrix = translate(matrix, planetPosition);
+	matrix = translate(matrix, vec3(0, -10.0f, 0));
+	return  matrix;*/
+	vec3 position = planetRibbon.GetCameraPosition(time);
+	position += planetPosition;
+	position += vec3(0, 2, 0);
+	return position;
 }

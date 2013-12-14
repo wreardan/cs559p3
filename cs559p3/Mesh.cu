@@ -9,6 +9,10 @@
 using namespace std;
 using namespace glm;
 
+
+
+
+
 //http://rosettacode.org/wiki/Factors_of_an_integer#C.2B.2B
 //we use factors to break problem into sub-problems
 int maxFactor(int n, int maxValue)
@@ -624,6 +628,16 @@ Mesh::~Mesh(void)
 {
 	//TODO: Add handle asserts here to make sure objects are de-allocated.  example:
 	//assert(vao == GL_BAD_VALUE);
+
+	glDeleteBuffers(1, &vboPosition);
+	glDeleteBuffers(1, &vboNormals);
+	glDeleteBuffers(1, &vboTextureCoords);
+
+	glDeleteBuffers(1, &vboIndices);
+	glDeleteBuffers(1, &vboNormalPositions);
+	glDeleteBuffers(1, &vboWireframeIndices);
+
+	//CUDA Unmap?
 }
 
 
@@ -742,10 +756,10 @@ void Mesh::Initialize(int width, int height)
 void Mesh::Draw(GLSLProgram & shader)
 {
 	//Set Material Properties
-	shader.setUniform("Material.Ka", Ka);
-	shader.setUniform("Material.Kd", Kd);
+	//shader.setUniform("Material.Ka", Ka);
+	//shader.setUniform("Material.Kd", Kd);
 	//shader.setUniform("Material.Ks", Ks);
-	shader.setUniform("Material.Shininess", Shininess);
+	//shader.setUniform("Material.Shininess", Shininess);
 
 	//Bind texture(s)
 	for(int i = 0; i < textures.size(); i++) {
@@ -753,7 +767,7 @@ void Mesh::Draw(GLSLProgram & shader)
 	}
 	shader.setUniform("ColorMap", 0);
 	//shader.setUniform("NormalMap", 1);
-	shader.setUniform("SpecularMap", 2);
+	//shader.setUniform("SpecularMap", 2);
 
 	glBindVertexArray(vao);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndices);

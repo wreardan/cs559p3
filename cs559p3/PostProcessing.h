@@ -24,5 +24,6 @@ public:
 	void UnBind();
 	void Draw(float time);
 	void ChangeEffect();
+	void ReSize(glm::ivec2 size);
 };
 

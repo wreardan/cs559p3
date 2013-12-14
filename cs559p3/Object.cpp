@@ -47,7 +47,7 @@ void Object::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lig
 	shader.setUniform("isStar", isStar);
 	//shader.setUniform("SolidColor", vec4(1.0f, 0.0f, 0.0f, 1.0f));
 	solidShader.use();
-	//solidShader.setUniform("MVP", projectionMatrix * modelView);
+	solidShader.setUniform("MVP", projectionMatrix * modelView);
 
 	//For each Mesh
 	for(int i = 0; i < (int)meshes.size(); i++) {
@@ -99,9 +99,8 @@ void Object::LoadTexture(GLuint textureHandle)
 
 void Object::Update(float deltaTime)
 {
-	//do nothing
-
 	//update worldMatrix
+	worldMatrix = mat4(1.0f);
 }
 
 void Object::Initialize()
@@ -126,6 +125,11 @@ void Object::Initialize()
 	mesh.CreateTextureCoords();
 }
 
+void Object::FreeShaders()
+{
+	shader.remove();
+	solidShader.remove();
+}
 
 void Object::InitializeShader(std::string vertexFilename, std::string fragmentFilename)
 {
@@ -151,4 +155,9 @@ void Object::InitializeShader(std::string vertexFilename, std::string fragmentFi
 		cerr << "Shader Program did not validate: " << solidShader.log() << endl;
 
 
+}
+
+void Object::SetWorldMatrix(glm::mat4 worldMatrix)
+{
+	this->worldMatrix = worldMatrix;
 }

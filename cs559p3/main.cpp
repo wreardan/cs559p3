@@ -50,13 +50,21 @@ GLSLProgram postProcessShader;
 glm::mat4 ProjectionMatrix;
 Lights lights;
 
+void ChangeWireframeMode()
+{
+	for(int i = 0; i < planets.size(); i++) 
+		planets[i].wireframeMode = ! planets[i].wireframeMode;
+	ribbon.wireframeMode = ! ribbon.wireframeMode;
+	
+}
+
 
 //Update function for timer
 void Update(float deltaTime) {
 	//update planets in solar system
 	for(int i = 0; i < planets.size(); i++) 
 		planets[i].Update(deltaTime);
-
+	ribbon.Update(deltaTime);
 }
 
 
@@ -75,13 +83,22 @@ void SceneDraw()
 	glFrontFace(GL_CW);
 
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClearDepth(1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
+	//mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
+	vec3 camPos = planets[SATURN].getRibbonPosition(timer.TotalTime() / 10.0f);
+	vec3 camTarget = camPos + 1.0f * camera.forwardDirection;
+	mat4 ViewMatrix = lookAt(camPos, camTarget, camera.camUp);
 	lights.cameraMatrix = ViewMatrix;
-	//mat4 modelView = translate(ViewMatrix, vec3(0.0f, -1.5f, 0.0f));
+
+	mat4 modelView = translate(ViewMatrix, vec3(0.0f, -1.5f, 0.0f));
 	//object.Render(modelView, ProjectionMatrix, lights);
+
+	//ribbon.isStar = true;
 	//ribbon.Render(modelView, ProjectionMatrix, lights);
+
+
 	for(int i = 0; i < planets.size(); i++)
 		planets[i].Render(ViewMatrix, ProjectionMatrix, lights);
 
@@ -107,13 +124,12 @@ void SceneInit()
 	Object::InitializeShader("Shaders/planet.vert", "Shaders/planet.frag");
 
 	//Compile Shader
-	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 2000.0f);
 
 	//object.Initialize();
 	ribbon.Initialize();
 	
 	//Planets
-	float distanceModifier = 7.0f;
+	float distanceModifier = 2.0f;
 	float sizeModifier = 4.0f;
 	float orbitMod = 10.0f;
 	float sunSize = 100.0f;
@@ -122,13 +138,13 @@ void SceneInit()
 	//MERCURY
 	planets[MERCURY].Initialize(float(3.83f/sizeModifier * 2), float( 38.7/distanceModifier + sunSize), (float)( 2.0f * PI / (24.0f/orbitMod) ), (float)( 2.0f * PI / 10.0f ), "mercuryHiRes.jpg");
 	//VENUS
-	planets[VENUS].Initialize(float(9.49f/sizeModifier * 2), float(72.3/distanceModifier + sunSize), (float)( 2.0f * PI / (61.5f/orbitMod )), (float)( 2.0f * PI / 15.0f ), "venusHiRes.jpg");
+	planets[VENUS].Initialize(float(9.49f/sizeModifier * 2), float(90.3/distanceModifier + sunSize), (float)( 2.0f * PI / (61.5f/orbitMod )), (float)( 2.0f * PI / 15.0f ), "venusHiRes.jpg");
 	//EARTH
 	planets[EARTH].Initialize(float(10.0f/sizeModifier * 2), float(200/distanceModifier + sunSize), (float)( 2.0f * PI / (100.0f/orbitMod )), (float)( 2.0f * PI / 20.0f ), "earthHiRes.jpg");
 	//JUPITER
 	planets[JUPITER].Initialize(float(112.10f/sizeModifier), float(520.0/distanceModifier + sunSize), (float)( 2.0f * PI / (111.0f/orbitMod )), (float)( 2.0f * PI / 25.0f ), "jupiter.jpg");
 	//SATURN
-	planets[SATURN].Initialize(float(94.20f/sizeModifier), float(958.0/distanceModifier + sunSize), (float)( 2.0f * PI / (290.0f/orbitMod)), (float)( 2.0f * PI / 30.0f ), "saturnHiRes.jpg");
+	planets[SATURN].Initialize(float(94.20f/sizeModifier), float(1208.0/distanceModifier + sunSize), (float)( 2.0f * PI / (290.0f/orbitMod)), (float)( 2.0f * PI / 30.0f ), "saturnHiRes.jpg");
 	//URANUS
 	planets[URANUS].Initialize(float(48.18f/sizeModifier), float(1920.0/distanceModifier + sunSize), (float)( 2.0f * PI / (837.0f/orbitMod )), (float)( 2.0f * PI / 35.0f ), "uranus.jpg");
 	//NEPTUNE
@@ -141,8 +157,8 @@ void SceneInit()
 	stars.isStar = true;
 	stars.Update(0.0f);
 
-	camera = Camera(vec3(0.0f, 0.0f, 180.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
-	lights.Add(Light(vec3(0.1f, 0.1f, 0.1f)));
+	camera = Camera(vec3(0.0f, 30.0f, 250.0f), vec3(0.0f), vec3(0.0f, 1.0f, 0.0f));
+	lights.Add(Light(vec3(0.0f, 100.0f, 0.1f)));
 	//lights.Add(Light(vec3(-0.5f, -1.0f, 1.0f)));
 
 	//Timer initialization
@@ -170,6 +186,19 @@ void DisplayFunc()
 
 
 //TESTING END
+
+void ResizeFunc(int width, int height)
+{
+	window.size.x = 1024;
+	window.size.y = 768;
+
+	postProcess.ReSize(window.size);
+
+	ProjectionMatrix = perspective(45.0f, (float)window.size.x / window.size.y, 0.1f, 4000.0f);
+
+	glViewport(0, 0, width, height);
+}
+
 
 void KeyboardFunc(unsigned char key, int x, int y) {
 	switch(key) {
@@ -209,6 +238,10 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 		}else {
 			timer.Stop();
 		}
+		break;
+	case 'f':
+	case 'F':
+		ChangeWireframeMode();
 		break;
 	case 'o':
 	case 'O':
@@ -286,6 +319,12 @@ void SpecialFunc(int c, int x, int y)
 	}
 }
 
+void Close()
+{
+
+}
+
+
 bool Initialize(int argc, char* argv[])
 {
 	glutInit(&argc, argv);
@@ -301,6 +340,9 @@ bool Initialize(int argc, char* argv[])
 	glutMouseFunc(mouse);
 	glutMotionFunc(motion);
 	glutSpecialFunc(SpecialFunc);
+	glutReshapeFunc(ResizeFunc);
+	glutCloseFunc(Close);
+	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 
 	if(glewInit() != GLEW_OK) {
 		cerr << "Glew failed to initialize" << endl;

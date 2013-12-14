@@ -1,6 +1,6 @@
 #pragma once
 #include "object.h"
-
+#include "Ribbon.h"
 
 #define MERCURY 0
 #define VENUS 1
@@ -37,17 +37,22 @@ protected:
 
 	std::string name;
 
+	Ribbon planetRibbon;
+
 public:
 	Planet(void);
 	~Planet(void);
 
 	virtual void Initialize(float radius, float orbitRadius, float orbitSpeed, float rotationSpeed, std::string textureFile);
+	virtual void Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lights);
 	virtual void Update(float deltaTime);
 
 	virtual void LoadTexture(std::string fileName);
 	
 	void calcPosition(float deltaTime); //sets planets position in orbit around sun, based on time and radius
 	void calcRotation(float deltaTime); //this calculates the current radians to rotate the planet around the y-axis
+
+	glm::vec3 getRibbonPosition(float time);
 
 private:
 	typedef Object super;

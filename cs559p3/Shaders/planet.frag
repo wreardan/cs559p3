@@ -7,6 +7,12 @@ in vec2 UV;
 in vec3 positionWorld;
 
 
+struct LightInfo {
+  vec3 Position;  // Light position in eye coords.
+  vec3 Intensity; // A,D,S intensity
+};
+uniform LightInfo Light[8];
+
 out vec4 FragColor;
 
 uniform sampler2D ColorMap;
@@ -15,9 +21,9 @@ uniform bool isStar;
 
 
 const float shininess = 1.0f;
-const vec3 lightIntensity = vec3(1.0f, 1.0f, 1.0f);
 
-const vec3 lightPosition = vec3(0.0f, 0.0f, 0.0f); //light position in world space
+//const vec3 lightIntensity = vec3(1.0f, 1.0f, 1.0f);
+//const vec3 lightPosition = vec3(0.0f, 0.0f, 0.0f); //light position in world space
 
 
 //ambient color
@@ -31,12 +37,12 @@ vec3 Kd = vec3(texture(ColorMap, UV)) *0.9;
 vec3 ads() {
 	
 	vec3 n = normalize( vec3(normal) ); 
-	vec3 s = normalize( lightPosition - positionWorld ); //find vector in terms of world space, equivilent to view space
+	vec3 s = normalize( Light[0].Position - positionWorld ); //find vector in terms of world space, equivilent to view space
 	vec3 v = normalize( vec3(-position) );
 	vec3 r = reflect( -s, n );
 
 
-	vec3 ambient = lightIntensity * Ka;
+	vec3 ambient = Light[0].Intensity * Ka;
 
 	vec3 diffuse = Kd * max( dot(s, n), 0.0f);
 
@@ -60,6 +66,6 @@ void main() {
 		FragColor = vec4(ads(), 1.0f);
 	}
 
-	//FragColor = vec4(0.5f, 1.0f, 0.5f, 1.0f);
+	//FragColor = vec4(1.0f, 0.0f, 0.0f, 1.0f);
 	//FragColor = texture(marsSampler, UV);
 }

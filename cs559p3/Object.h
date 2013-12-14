@@ -27,7 +27,10 @@ public:
 	virtual void LoadTexture(std::string fileName);
 	virtual void LoadTexture(GLuint textureHandle);
 
+	virtual void SetWorldMatrix(glm::mat4 worldMatrix);
+
 	static void InitializeShader(std::string vertexFilename, std::string fragmentFilename);
+	static void FreeShaders();
 
 	bool wireframeMode;
 	bool drawNormals;

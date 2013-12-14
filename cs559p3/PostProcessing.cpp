@@ -107,3 +107,9 @@ void PostProcessing::Draw(float time)
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_TEXTURE_2D);
 }
+
+void PostProcessing::ReSize(glm::ivec2 size)
+{
+	fbo.TakeDown();
+	fbo.Initialize(size);
+}
