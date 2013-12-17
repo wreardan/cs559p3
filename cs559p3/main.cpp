@@ -38,6 +38,8 @@ Planet stars;
 Mars mars;
 float simulationSpeed = 20.0f;
 float simulationTime = 0.0f;
+float simulationModifier = 1000.0f;
+int currentPlanet = 0;
 
 PostProcessing postProcess;
 
@@ -59,7 +61,7 @@ void ChangeWireframeMode()
 	for(int i = 0; i < planets.size(); i++) 
 		planets[i].wireframeMode = ! planets[i].wireframeMode;
 	ribbon.wireframeMode = ! ribbon.wireframeMode;
-	
+	mars.wireframeMode = ! mars.wireframeMode;
 }
 
 
@@ -94,7 +96,18 @@ void SceneDraw()
 	//mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
 	//vec3 camPos = planets[SATURN].getRibbonPosition(timer.TotalTime() / 10.0f);
 	simulationTime += simulationSpeed * timer.DeltaTime();
-	vec3 camPos = mars.getRibbonPosition(simulationTime / 1000.0f);
+	if(simulationTime > simulationModifier) {
+		simulationTime = 0.0f;
+		currentPlanet = (currentPlanet + 1) % planets.size();
+	}
+	if(simulationTime < 0.0f) { //we are going backwards in time
+		simulationTime = simulationModifier - 1.0f;
+		currentPlanet = abs(currentPlanet - 1) % planets.size();
+	}
+
+	vec3 camPos = planets[currentPlanet].getRibbonPosition(simulationTime / simulationModifier);
+
+
 	vec3 camTarget = camPos + 1.0f * camera.forwardDirection;
 	mat4 ViewMatrix = lookAt(camPos, camTarget, camera.camUp);
 	lights.cameraMatrix = ViewMatrix;
