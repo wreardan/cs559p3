@@ -169,6 +169,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <CudaCompile Include="Mesh.cu">
       <FileType>CppCode</FileType>
     </CudaCompile>
+    <ClCompile Include="Mars.cpp" />
     <ClCompile Include="Object.cpp" />
     <ClCompile Include="Planet.cpp" />
     <ClCompile Include="PostProcessing.cpp" />
@@ -182,6 +183,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="glslprogram.h" />
     <ClInclude Include="ilcontainer.h" />
     <ClInclude Include="Lights.h" />
+    <ClInclude Include="Mars.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Object.h" />
     <ClInclude Include="Planet.h" />

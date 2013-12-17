@@ -26,6 +26,7 @@ Camera camera;
 #include "Time.h"
 #include "fbo.h"
 #include "PostProcessing.h"
+#include "Mars.h"
 
 Time timer;
 
@@ -34,6 +35,7 @@ Object object;
 Ribbon ribbon;
 vector<Planet> planets;
 Planet stars;
+Mars mars;
 
 PostProcessing postProcess;
 
@@ -65,6 +67,7 @@ void Update(float deltaTime) {
 	for(int i = 0; i < planets.size(); i++) 
 		planets[i].Update(deltaTime);
 	ribbon.Update(deltaTime);
+	mars.Update(deltaTime);
 }
 
 
@@ -87,7 +90,8 @@ void SceneDraw()
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	//mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
-	vec3 camPos = planets[SATURN].getRibbonPosition(timer.TotalTime() / 10.0f);
+	//vec3 camPos = planets[SATURN].getRibbonPosition(timer.TotalTime() / 10.0f);
+	vec3 camPos = mars.getRibbonPosition(timer.TotalTime() / 10.0f);
 	vec3 camTarget = camPos + 1.0f * camera.forwardDirection;
 	mat4 ViewMatrix = lookAt(camPos, camTarget, camera.camUp);
 	lights.cameraMatrix = ViewMatrix;
@@ -101,7 +105,7 @@ void SceneDraw()
 
 	for(int i = 0; i < planets.size(); i++)
 		planets[i].Render(ViewMatrix, ProjectionMatrix, lights);
-
+	mars.Render(ViewMatrix, ProjectionMatrix, lights);
 
 	/*program.use();
 	mat4 modelView = scale(ViewMatrix, vec3(3.0f));
@@ -152,6 +156,8 @@ void SceneInit()
 	//SUN
 	planets[SUN].Initialize(50.0f, 0.0f, 0.0f, (float)( 2.0f * PI / 10.0f ), "sun4.jpg");
 	planets[SUN].isStar = true;
+	//MARS
+	mars.Initialize(130.0f/sizeModifier, float(350.0/distanceModifier + sunSize), (float)( 2.0f * PI / (111.0f/orbitMod )) , 2.0f * float(PI) / 13.0f, "mars.jpg");
 	//STARS
 	stars.Initialize(1500.0f, 0.0f, 0.0f, 0.0f, "stars6.jpg");
 	stars.isStar = true;
