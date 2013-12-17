@@ -36,6 +36,8 @@ Ribbon ribbon;
 vector<Planet> planets;
 Planet stars;
 Mars mars;
+float simulationSpeed = 20.0f;
+float simulationTime = 0.0f;
 
 PostProcessing postProcess;
 
@@ -91,7 +93,8 @@ void SceneDraw()
 
 	//mat4 ViewMatrix = lookAt(camera.camPosition, camera.camTarget, camera.camUp);
 	//vec3 camPos = planets[SATURN].getRibbonPosition(timer.TotalTime() / 10.0f);
-	vec3 camPos = mars.getRibbonPosition(timer.TotalTime() / 10.0f);
+	simulationTime += simulationSpeed * timer.DeltaTime();
+	vec3 camPos = mars.getRibbonPosition(simulationTime / 1000.0f);
 	vec3 camTarget = camPos + 1.0f * camera.forwardDirection;
 	mat4 ViewMatrix = lookAt(camPos, camTarget, camera.camUp);
 	lights.cameraMatrix = ViewMatrix;
@@ -252,6 +255,12 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 	case 'o':
 	case 'O':
 		postProcess.ChangeEffect();
+		break;
+	case '+':
+		simulationSpeed += 10;
+		break;
+	case '-':
+		simulationSpeed -= 10;
 		break;
 	case 27:   //escape
 		glutLeaveMainLoop();
