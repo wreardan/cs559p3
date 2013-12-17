@@ -17,6 +17,8 @@ Ribbon::Ribbon(void)
 	controlPoints.push_back(vec3(0.0f, 1.5f, 1.0f));
 	controlPoints.push_back(vec3(0.0f, 2.0f, 0.0f));
 	controlPoints.push_back(vec3(0.0f, 2.5f, -1.0f));
+
+	changing = false;
 }
 
 void Ribbon::Initialize(void)
@@ -52,9 +54,12 @@ void Ribbon::Initialize(void)
 	}
 }
 
-void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints, int mode)
+void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints, int mode, float deltaTime)
 {
 	controlPoints.resize(0);
+
+	time += deltaTime;
+	//if(time > 1.0f) time -= 1.0f;
 
 	float radianStep = float(2.0f * PI) / (numPoints - 3);
 	for(int i = 0; i < numPoints; i++) {
@@ -68,7 +73,8 @@ void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints, int 
 			ribbonControlPoint.y = 0.0f; //this will be translated to the planets y value
 			break;
 		case 1:
-			ribbonControlPoint.y = sinf(radian * numPoints / 2);
+			changing = true;
+			ribbonControlPoint.y = sinf(radian * numPoints / 2 + time);
 			break;
 		}
 		ribbonControlPoint.z = radius * sinf(radian);
@@ -112,4 +118,24 @@ glm::vec3 Ribbon::GetCameraPosition(float time)
 
 Ribbon::~Ribbon(void)
 {
+}
+void Ribbon::Update(float deltaTime)
+{
+	if(changing)
+	{
+		for(int i = 1; i < controlPoints.size() - 2; i++)
+		{
+			Mesh & mesh = meshes[i - 1];
+
+			vec3 v1 = controlPoints[i - 1];
+			vec3 v2 = controlPoints[i];
+			vec3 v3 = controlPoints[i + 1];
+			vec3 v4 = controlPoints[i + 2];
+			mesh.CreateRibbon(v1,v2,v3,v4);
+			//mesh.CalculateNormals();
+			//mesh.CreateNormalsVisualization();
+		}
+	}
+
+	super::Update(deltaTime);
 }

@@ -30,6 +30,7 @@ void Planet::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lig
 	//world = glm::scale(world, vec3(radius * 1.1f));
 	planetRibbon.SetWorldMatrix(world);
 	planetRibbon.wireframeMode = wireframeMode;
+	planetRibbon.drawNormals = drawNormals;
 	planetRibbon.Render(viewMatrix, projectionMatrix, lights);
 }
 

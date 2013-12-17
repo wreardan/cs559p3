@@ -588,6 +588,58 @@ void Mesh::CreateNormalsVisualization()
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
 
+//Teh fun stuffs -> MORPHING! via CUDA, chomp chomp
+__global__ void MorphMeshKernel (vec3 * positions, vec3 * newPositions, vec3 * normals, ivec2 meshSize,
+						  float radius, float height, vec3 center, ivec2 offset)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	x = (x + offset.x) % meshSize.x;
+	y = (y + offset.y) % meshSize.y;
+
+	unsigned int index = (y * meshSize.x + x);
+
+	vec3 & point = positions[index];
+	vec3 & newPoint = newPositions[index];
+	vec3 & normal = normals[index];
+
+	float distanceToCenter = glm::distance(center, point);
+	if(distanceToCenter > radius) return;
+
+	float scalar = 1.0f - distanceToCenter / radius;	//Linear Function, change to Bezier later
+
+	newPoint = point + normal * scalar;
+}
+
+
+//Morph points with morphing kernel
+void Mesh::MorphMesh(glm::ivec2 point, float morphRadius, float morphHeight)
+{
+	size_t num_bytes;
+	vec3* positions, *normals, *normalPositions;
+	dim3 block, grid;
+
+	//ivec2 offset = -1 * ivec2(width / 2, height / 2);	//TODO
+	ivec2 offset = ivec2(0, 0);	//TODO
+	vec3 center = vec3(0.0f);	//TODO
+
+	cudaGraphicsMapResources(1, &resPosition, 0);
+	cudaGraphicsMapResources(1, &resNormals, 0);
+	cudaGraphicsResourceGetMappedPointer((void **)&positions, &num_bytes, resPosition);
+	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
+	
+	CalculateBlockGridSize(block, grid);
+	MorphMeshKernel<<< grid, block>>>(positions, positions, normals, ivec2(width, height), morphRadius, morphHeight, center, offset);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+	
+	cudaGraphicsUnmapResources(1, &resNormals, 0);
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+
+
+	
+}
+
 //Initialize default values
 Mesh::Mesh(void)
 {

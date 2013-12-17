@@ -46,6 +46,20 @@ void Mars::Initialize(float radius, float orbitRadius, float orbitSpeed, float r
 	name = textureFile;
 
 	//Initialize planet's ribbon
-	planetRibbon.CreateCircularRibbonControlPoints(this->radius + 10.0f, 20);
+	planetRibbon.CreateCircularRibbonControlPoints(this->radius + 10.0f, 20, 1);
 	planetRibbon.Initialize();
+}
+
+void Mars::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix, Lights lights)
+{
+	planetRibbon.CreateCircularRibbonControlPoints(this->radius + 10.0f, 20, 1);
+	super::Render(viewMatrix, projectionMatrix, lights);
+}
+
+void Mars::Update(float deltaTime)
+{
+	super::Update(deltaTime);
+	
+	planetRibbon.CreateCircularRibbonControlPoints(this->radius + 10.0f, 20, 1, deltaTime);
+	planetRibbon.Update(deltaTime);
 }

@@ -65,6 +65,8 @@ public:
 	void CreateNormalsVisualization();
 	void CreateTextureCoords();
 
+	void MorphMesh(glm::ivec2 point, float morphRadius, float morphHeight);
+
 	void Initialize(int width, int height);
 	void Draw(GLSLProgram & shader);
 	void DrawWireframe(GLSLProgram & shader);

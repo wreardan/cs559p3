@@ -40,6 +40,7 @@ float simulationSpeed = 20.0f;
 float simulationTime = 0.0f;
 float simulationModifier = 1000.0f;
 int currentPlanet = 0;
+bool marsMode = false;
 
 PostProcessing postProcess;
 
@@ -63,6 +64,15 @@ void ChangeWireframeMode()
 	ribbon.wireframeMode = ! ribbon.wireframeMode;
 	mars.wireframeMode = ! mars.wireframeMode;
 }
+void ChangeNormalsMode()
+{
+	for(int i = 0; i < planets.size(); i++) 
+		planets[i].drawNormals = ! planets[i].drawNormals;
+	ribbon.drawNormals = ! ribbon.drawNormals;
+	mars.drawNormals = ! mars.drawNormals;
+}
+
+
 
 
 //Update function for timer
@@ -105,8 +115,11 @@ void SceneDraw()
 		currentPlanet = abs(currentPlanet - 1) % planets.size();
 	}
 
-	vec3 camPos = planets[currentPlanet].getRibbonPosition(simulationTime / simulationModifier);
-
+	vec3 camPos;
+	if(marsMode)
+		camPos = mars.getRibbonPosition(simulationTime / simulationModifier);
+	else
+		camPos = planets[currentPlanet].getRibbonPosition(simulationTime / simulationModifier);
 
 	vec3 camTarget = camPos + 1.0f * camera.forwardDirection;
 	mat4 ViewMatrix = lookAt(camPos, camTarget, camera.camUp);
@@ -249,10 +262,10 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 		camera.MoveDown();
 		break;
 	case 'n':
-		ribbon.drawNormals = ! ribbon.drawNormals;
+		ChangeNormalsMode();
 		break;
 	case 'm':
-		ribbon.wireframeMode = ! ribbon.wireframeMode;
+		marsMode = ! marsMode;
 		break;
 	case 'p':
 		if(timer.mStopped) {
