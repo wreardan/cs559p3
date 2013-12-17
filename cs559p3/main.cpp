@@ -59,14 +59,14 @@ Lights lights;
 
 void ChangeWireframeMode()
 {
-	for(int i = 0; i < planets.size(); i++) 
+	for(int i = 0; i < (int)planets.size(); i++) 
 		planets[i].wireframeMode = ! planets[i].wireframeMode;
 	ribbon.wireframeMode = ! ribbon.wireframeMode;
 	mars.wireframeMode = ! mars.wireframeMode;
 }
 void ChangeNormalsMode()
 {
-	for(int i = 0; i < planets.size(); i++) 
+	for(int i = 0; i < (int)planets.size(); i++) 
 		planets[i].drawNormals = ! planets[i].drawNormals;
 	ribbon.drawNormals = ! ribbon.drawNormals;
 	mars.drawNormals = ! mars.drawNormals;
@@ -78,7 +78,7 @@ void ChangeNormalsMode()
 //Update function for timer
 void Update(float deltaTime) {
 	//update planets in solar system
-	for(int i = 0; i < planets.size(); i++) 
+	for(int i = 0; i < (int)planets.size(); i++) 
 		planets[i].Update(deltaTime);
 	ribbon.Update(deltaTime);
 	mars.Update(deltaTime);
@@ -132,7 +132,7 @@ void SceneDraw()
 	//ribbon.Render(modelView, ProjectionMatrix, lights);
 
 
-	for(int i = 0; i < planets.size(); i++)
+	for(int i = 0; i < (int)planets.size(); i++)
 		planets[i].Render(ViewMatrix, ProjectionMatrix, lights);
 	mars.Render(ViewMatrix, ProjectionMatrix, lights);
 

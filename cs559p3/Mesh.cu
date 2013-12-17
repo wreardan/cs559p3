@@ -181,7 +181,6 @@ __global__ void SphereEdgeCaseNormalsKernel(glm::vec3* positions, glm::vec3* nor
 void Mesh::FixSphereEdgeCases()
 {
 	size_t num_bytes;
-	int* indices;
 	vec3* positions, *normals;
 	dim3 block, grid;
 
@@ -617,7 +616,7 @@ __global__ void MorphMeshKernel (vec3 * positions, vec3 * newPositions, vec3 * n
 void Mesh::MorphMesh(glm::ivec2 point, float morphRadius, float morphHeight)
 {
 	size_t num_bytes;
-	vec3* positions, *normals, *normalPositions;
+	vec3* positions, *normals;
 	dim3 block, grid;
 
 	//ivec2 offset = -1 * ivec2(width / 2, height / 2);	//TODO
@@ -814,7 +813,7 @@ void Mesh::Draw(GLSLProgram & shader)
 	//shader.setUniform("Material.Shininess", Shininess);
 
 	//Bind texture(s)
-	for(int i = 0; i < textures.size(); i++) {
+	for(int i = 0; i < (int)textures.size(); i++) {
 		textures[i]->Bind(i);
 	}
 	shader.setUniform("ColorMap", 0);

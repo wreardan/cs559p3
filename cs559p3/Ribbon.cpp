@@ -28,7 +28,7 @@ void Ribbon::Initialize(void)
 	textures[1].Initialize("Textures/hardwood_NRM.jpg");
 	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
 
-	for(int i = 1; i < controlPoints.size() - 2; i++)
+	for(int i = 1; i < (int)controlPoints.size() - 2; i++)
 	{
 		meshes.push_back(Mesh());
 		Mesh & mesh = meshes[meshes.size() - 1];
@@ -123,7 +123,7 @@ void Ribbon::Update(float deltaTime)
 {
 	if(changing)
 	{
-		for(int i = 1; i < controlPoints.size() - 2; i++)
+		for(int i = 1; i < (int)controlPoints.size() - 2; i++)
 		{
 			Mesh & mesh = meshes[i - 1];
 
