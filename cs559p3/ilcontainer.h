@@ -7,6 +7,8 @@
 #include <IL/il.h>
 #include <IL/ilu.h>
 #include <IL/ilut.h>
+#include <map>
+#include <string>
 
 #define	BAD_IL_VALUE	IL_INVALID_VALUE
 #ifndef BAD_GL_VALUE
@@ -22,6 +24,9 @@
 
 class ILContainer
 {
+protected:
+	static std::map<std::string, ILContainer *> textureMap;
+
 public:
 	ILContainer()
 	{
@@ -31,7 +36,7 @@ public:
 
 	~ILContainer();
 	
-	bool Initialize(const char * file_name);
+	bool Initialize(std::string file_name);
 	bool Initialize();
 	void Bind(GLuint texture_unit = 0);
 

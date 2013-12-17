@@ -1,15 +1,26 @@
 #include <assert.h>
 #include "ilcontainer.h"
 
-bool ILContainer::Initialize(const char * file_name)
+std::map<std::string, ILContainer *> ILContainer::textureMap;
+
+bool ILContainer::Initialize(std::string file_name)
 {
+	std::map<std::string, ILContainer *>::iterator pos;
+	pos = textureMap.find(file_name);
+	if(pos != textureMap.end()) {
+		ILContainer * cached = pos->second;
+		il_handle = cached->il_handle;
+		il_texture_handle = cached->il_texture_handle;
+		return true;
+	}
+
 	// We are asserting that we have not initialized this object before.
 	assert(this->il_handle == BAD_IL_VALUE);
 
 	if ((this->il_handle = ilGenImage()) == BAD_IL_VALUE)
 		return false;
 	ilBindImage(this->il_handle);
-	if (!ilLoadImage((const ILstring) file_name))
+	if (!ilLoadImage((const ILstring) file_name.c_str()))
 		return false;
 
 	glGenTextures(1, &this->il_texture_handle);
@@ -26,6 +37,9 @@ bool ILContainer::Initialize(const char * file_name)
 
 	glTexImage2D(GL_TEXTURE_2D, 0, this->format, this->width,
 		this->height, 0, this->format, GL_UNSIGNED_BYTE, this->data);
+
+	textureMap[file_name] = this;
+
 	return true;
 }
 
