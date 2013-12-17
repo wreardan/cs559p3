@@ -52,7 +52,7 @@ void Ribbon::Initialize(void)
 	}
 }
 
-void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints)
+void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints, int mode)
 {
 	controlPoints.resize(0);
 
@@ -62,8 +62,15 @@ void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints)
 
 		vec3 ribbonControlPoint;
 		ribbonControlPoint.x = radius * cosf(radian);
-		//ribbonControlPoint.y = 0.0f; //this will be translated to the planets y value
-		ribbonControlPoint.y = sinf(radian);
+		switch(mode)
+		{
+		case 0:
+			ribbonControlPoint.y = 0.0f; //this will be translated to the planets y value
+			break;
+		case 1:
+			ribbonControlPoint.y = sinf(radian * numPoints / 2);
+			break;
+		}
 		ribbonControlPoint.z = radius * sinf(radian);
 
 		controlPoints.push_back(ribbonControlPoint);

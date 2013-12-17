@@ -13,7 +13,7 @@ public:
 	~Ribbon(void);
 
 	virtual void Initialize();
-	virtual void CreateCircularRibbonControlPoints(float radius, int numPoints);
+	virtual void CreateCircularRibbonControlPoints(float radius, int numPoints, int mode = 0);
 	
 	glm::vec3 GetCameraPosition(float time);
 
