@@ -1,3 +1,10 @@
+/*
+Rework Camera Class:
+-Add Camera Types
+ -Chase Object *
+ -Rotate about point
+ -Move along ribbon
+ */
 
 #include "Cam.h"
 

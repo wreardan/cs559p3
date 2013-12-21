@@ -40,6 +40,12 @@
     <ClCompile Include="Mars.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneSolarSystem.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Source">
@@ -90,6 +96,12 @@
       <Filter>Header</Filter>
     </ClInclude>
     <ClInclude Include="Mars.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Header</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneSolarSystem.h">
       <Filter>Header</Filter>
     </ClInclude>
   </ItemGroup>
