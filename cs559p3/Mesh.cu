@@ -62,7 +62,7 @@ void CheckErrorCUDA()
 	cudaError_t cudaResult;
 	cudaResult = cudaGetLastError();
 	if (cudaResult != cudaSuccess)
-		printf(cudaGetErrorString(cudaResult));
+		printf("CUDA Error: %s\n", cudaGetErrorString(cudaResult));
 }
 
 //This kernel fills the Planar Mesh's Vertex Positions
@@ -265,60 +265,6 @@ void Mesh::CreateFullRibbon(std::vector<glm::vec3> & controlPoints)
 
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
-
-
-////This kernel fills the Ribbon Mesh's Vertex Positions
-//__global__ void CreateFullRibbonKernel(vec3 *pos, unsigned int width, unsigned int height,
-//								   float xFactor, float yFactor,
-//								   vec3 * controlPoints, int numControlPoints)
-//{
-//    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
-//    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
-//	unsigned int z = blockIdx.z*blockDim.z + threadIdx.z;
-//
-//	float x_coord = x * xFactor * 2 - 1;
-//	float y_coord = y * yFactor;
-//
-//	vec3 & v1 = controlPoints[(z + 0) % numControlPoints];
-//	vec3 & v2 = controlPoints[(z + 1) % numControlPoints];
-//	vec3 & v3 = controlPoints[(z + 2) % numControlPoints];
-//	vec3 & v4 = controlPoints[(z + 3) % numControlPoints];
-//	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
-//
-//	unsigned int index =  width * (z * height + y) + x;
-//	
-//	pos[index] = vec3( spline.x + x_coord, spline.y, spline.z);
-//}
-//void Mesh::CreateFullRibbon(std::vector<glm::vec3> & controlPoints)
-//{
-//	vec3* dptr;
-//	dim3 block, grid;
-//	int numControlPoints = controlPoints.size();
-//
-//	//Buffer data to controlPoints buffer
-//	BufferControlPoints(controlPoints);
-//
-//	//Map Buffers
-//	cudaGraphicsMapResources(1, &resPosition, 0);
-//	size_t num_bytes;
-//	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
-//	
-//    // Calculate block,grid sizes.  Then add Z for each controlPoint
-//	CalculateBlockGridSize(block, grid);
-//	grid.z = numControlPoints - 2;
-//
-//	float xFactor = 1.0f / (float)(width - 1);
-//	float yFactor = 1.0f / (float)(height / numControlPoints - 1);
-//
-//	//Call full ribbon kernel, wait for completion, check for errors
-//    CreateFullRibbonKernel<<< grid, block>>>(dptr, width, height / numControlPoints, xFactor, yFactor, 
-//		resControlPoints, numControlPoints);
-//	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
-//	CheckErrorCUDA();
-//
-//	//UnMap Resources
-//	cudaGraphicsUnmapResources(1, &resPosition, 0);
-//}
 
 
 //This kernel fills the Ribbon Mesh's Vertex Positions

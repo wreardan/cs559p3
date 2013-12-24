@@ -145,7 +145,7 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="Mesh.cu">
-      <Filter>Source Files</Filter>
+      <Filter>Header Files</Filter>
     </CudaCompile>
   </ItemGroup>
 </Project>

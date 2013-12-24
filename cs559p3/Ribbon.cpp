@@ -56,13 +56,13 @@ Ribbon::Ribbon(void)
 
 void Ribbon::Initialize()
 {
-
+	const int meshResolution = 16;
 	//Create Mesh
 	meshes.push_back(Mesh());
 	Mesh & mesh = meshes[meshes.size() - 1];
 	int numSegments = (controlPoints.size() - 3);
-	int width = 16;
-	int height = 16 * numSegments;
+	int width = meshResolution;
+	int height = meshResolution * numSegments;
 	mesh.Initialize(width, height);
 
 	//Buffer ControlPoints, then run the FullRibbonKernel
@@ -123,17 +123,16 @@ glm::vec3 Ribbon::GetCameraPosition(float time)
 	while(time > 1.0f)
 		time -= 1.0f;
 
-	int size = controlPoints.size() - 2;
+	int size = controlPoints.size() - 3;
 
 	float splineTime = time * size;
 	int pointNum = ( (int) splineTime) % (size);
 	splineTime -= pointNum;
 
-	int p1location = ( pointNum - 1);
-	if(p1location < 0) p1location = size;
-	int p2location = ( pointNum) % size;
-	int p3location = ( pointNum + 1) % size;
-	int p4location = ( pointNum + 2) % size;
+	int p1location = ( pointNum) % size;
+	int p2location = ( pointNum + 1) % size;
+	int p3location = ( pointNum + 2) % size;
+	int p4location = ( pointNum + 3) % size;
 
 	vec3 v1 = controlPoints[p1location];
 	vec3 v2 = controlPoints[p2location];
