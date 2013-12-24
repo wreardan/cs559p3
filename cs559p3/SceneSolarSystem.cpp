@@ -7,7 +7,7 @@ SceneSolarSystem::SceneSolarSystem(void)
 	simulationTime = 0.0f;
 	simulationModifier = 1000.0f;
 	currentPlanet = 0;
-	marsMode = false;
+	marsMode = true;
 }
 
 
@@ -89,42 +89,11 @@ void SceneSolarSystem::Update()
 void SceneSolarSystem::Keyboard(unsigned char key, glm::ivec2 point)
 {
 	switch(key) {
-	case 'w':
-	case 'W':
-		camera.MoveForward();
-		break;
-	case 's':
-	case 'S':
-		camera.MoveBackward();
-		break;
-	case 'a':
-	case 'A':
-		camera.MoveLeft();
-		break;
-	case 'd':
-	case 'D':
-		camera.MoveRight();
-		break;
-	case 'q':
-	case 'Q':
-		camera.MoveUp();
-		break;
-	case 'e':
-	case 'E':
-		camera.MoveDown();
-		break;
 	case 'n':
 		ChangeNormalsMode();
 		break;
 	case 'm':
 		marsMode = ! marsMode;
-		break;
-	case 'p':
-		if(timer.mStopped) {
-			timer.Start();
-		}else {
-			timer.Stop();
-		}
 		break;
 	case 'f':
 	case 'F':
@@ -136,9 +105,8 @@ void SceneSolarSystem::Keyboard(unsigned char key, glm::ivec2 point)
 	case '-':
 		simulationSpeed -= 10;
 		break;
-	case 27:   //escape
-		glutLeaveMainLoop();
-		break;
+	default:
+		super::Keyboard(key, point);
 	}
 }
 

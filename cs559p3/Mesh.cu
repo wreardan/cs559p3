@@ -140,35 +140,6 @@ void Mesh::CreateSphereMesh()
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
 
-/*__global__ void SphereEdgeCaseNormalsKernel(float3 *normals, unsigned int width, unsigned int height)
-{
-    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
-	
-    normals[0*width+x] = make_float3(0, 1, 0);
-    normals[(height-1)*width+x] = make_float3(0, -1, 0);
-}
-
-void Mesh::FixSphereEdgeCases()
-{
-	size_t num_bytes;
-	float3 *normals;
-	dim3 block, grid;
-
-	//Map resources and get pointers
-	cudaGraphicsMapResources(1, &resNormals, 0);
-	cudaGraphicsResourceGetMappedPointer((void **)&normals, &num_bytes, resNormals);
-	
-    //Lastly, Normalize
-	grid = dim3(width, 1, 1);
-	block = dim3(1, 1, 1);
-	SphereEdgeCaseNormalsKernel<<< grid, block>>>(normals, width, height);
-	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
-
-	//Unmap Resources
-	cudaGraphicsUnmapResources(1, &resNormals, 0);
-	cudaGraphicsUnmapResources(1, &resPosition, 0);
-	cudaGraphicsUnmapResources(1, &resIndices, 0);
-}*/
 __global__ void SphereEdgeCaseNormalsKernel(glm::vec3* positions, glm::vec3* normals, unsigned int width)
 {
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
@@ -176,7 +147,6 @@ __global__ void SphereEdgeCaseNormalsKernel(glm::vec3* positions, glm::vec3* nor
 	
     normals[y*width+x] = normalize(positions[y*width+x]);
 }
-
 
 void Mesh::FixSphereEdgeCases()
 {
@@ -243,6 +213,114 @@ void Mesh::CreateRibbon(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4)
 	cudaGraphicsUnmapResources(1, &resPosition, 0);
 }
 
+
+//This kernel fills the Ribbon Mesh's Vertex Positions
+__global__ void CreateFullRibbonKernel(vec3 *pos, unsigned int width, unsigned int height,
+								   float xFactor, float yFactor,
+								   vec3 * controlPoints, unsigned int segmentHeight)
+{
+    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+
+	int segmentNum = y / segmentHeight;
+	int yRemainder = y % segmentHeight;
+
+	float x_coord = x * xFactor * 2 - 1;
+	float y_coord = yRemainder * yFactor;
+	vec3 spline = catmullRom(
+		controlPoints[segmentNum+0],
+		controlPoints[segmentNum+1],
+		controlPoints[segmentNum+2],
+		controlPoints[segmentNum+3],
+		y_coord);
+	
+	//pos[y * width + x] = vec3( spline.x + x_coord, spline.y, spline.z);
+	pos[(y*width) + x ] = vec3( spline.x + x_coord, spline.y, spline.z);
+}
+
+//Create a spline based ribbon mesh
+void Mesh::CreateFullRibbon(std::vector<glm::vec3> & controlPoints)
+{
+	vec3* dptr;
+	dim3 block, grid;
+
+	//Buffer data to controlPoints buffer
+	BufferControlPoints(controlPoints);
+
+	//Map position VBO
+	cudaGraphicsMapResources(1, &resPosition, 0);
+	size_t num_bytes;
+	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
+	
+    // Calculate Block/grid size and uniforms, then execute kernel
+	CalculateBlockGridSize(block, grid);
+	int segmentHeight = height / (controlPoints.size() - 3);
+
+	float xFactor = 1.0f / ((float)width - 1);
+	float yFactor = 1.0f / ((float)segmentHeight);
+    CreateFullRibbonKernel<<< grid, block>>>(dptr, width, height, xFactor, yFactor, 
+		resControlPoints, segmentHeight);
+	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+	CheckErrorCUDA();
+
+	cudaGraphicsUnmapResources(1, &resPosition, 0);
+}
+
+
+////This kernel fills the Ribbon Mesh's Vertex Positions
+//__global__ void CreateFullRibbonKernel(vec3 *pos, unsigned int width, unsigned int height,
+//								   float xFactor, float yFactor,
+//								   vec3 * controlPoints, int numControlPoints)
+//{
+//    unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
+//    unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
+//	unsigned int z = blockIdx.z*blockDim.z + threadIdx.z;
+//
+//	float x_coord = x * xFactor * 2 - 1;
+//	float y_coord = y * yFactor;
+//
+//	vec3 & v1 = controlPoints[(z + 0) % numControlPoints];
+//	vec3 & v2 = controlPoints[(z + 1) % numControlPoints];
+//	vec3 & v3 = controlPoints[(z + 2) % numControlPoints];
+//	vec3 & v4 = controlPoints[(z + 3) % numControlPoints];
+//	vec3 spline = catmullRom(v1, v2, v3, v4, y_coord);
+//
+//	unsigned int index =  width * (z * height + y) + x;
+//	
+//	pos[index] = vec3( spline.x + x_coord, spline.y, spline.z);
+//}
+//void Mesh::CreateFullRibbon(std::vector<glm::vec3> & controlPoints)
+//{
+//	vec3* dptr;
+//	dim3 block, grid;
+//	int numControlPoints = controlPoints.size();
+//
+//	//Buffer data to controlPoints buffer
+//	BufferControlPoints(controlPoints);
+//
+//	//Map Buffers
+//	cudaGraphicsMapResources(1, &resPosition, 0);
+//	size_t num_bytes;
+//	cudaGraphicsResourceGetMappedPointer((void **)&dptr, &num_bytes, resPosition);
+//	
+//    // Calculate block,grid sizes.  Then add Z for each controlPoint
+//	CalculateBlockGridSize(block, grid);
+//	grid.z = numControlPoints - 2;
+//
+//	float xFactor = 1.0f / (float)(width - 1);
+//	float yFactor = 1.0f / (float)(height / numControlPoints - 1);
+//
+//	//Call full ribbon kernel, wait for completion, check for errors
+//    CreateFullRibbonKernel<<< grid, block>>>(dptr, width, height / numControlPoints, xFactor, yFactor, 
+//		resControlPoints, numControlPoints);
+//	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
+//	CheckErrorCUDA();
+//
+//	//UnMap Resources
+//	cudaGraphicsUnmapResources(1, &resPosition, 0);
+//}
+
+
 //This kernel fills the Ribbon Mesh's Vertex Positions
 __global__ void CreateStaircaseKernel(vec3 *pos, unsigned int width, unsigned int height,
 								   float xFactor, float yFactor,
@@ -294,19 +372,26 @@ void Mesh::CreateStaircase(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v
 
 
 //This kernel fills the Planar Mesh's Vertex Positions
-__global__ void CreateTextureCoordsKernel(float2 *pos, unsigned int width, unsigned int height)
+__global__ void CreateTextureCoordsKernel(float2 *pos, unsigned int width, unsigned int height,
+										  unsigned int tileWidth, unsigned int tileHeight)
 {
     unsigned int x = blockIdx.x*blockDim.x + threadIdx.x;
     unsigned int y = blockIdx.y*blockDim.y + threadIdx.y;
 
+	unsigned int tiledX = x % tileWidth;
+	unsigned int tiledY = y % tileHeight;
+
 	float x_coord = x/((float)(width-1));
 	float y_coord = y/((float)(height-1));
+
     pos[y*width+x] = make_float2(x_coord, y_coord);
 }
 
 
-void Mesh::CreateTextureCoords()
+void Mesh::CreateTextureCoords(int tileWidth, int tileHeight)
 {
+	assert( tileWidth > 0 && tileHeight > 0);
+
 	float2* dptr;
 	dim3 block, grid;
 
@@ -317,7 +402,8 @@ void Mesh::CreateTextureCoords()
     // execute the kernel with factored block and grid sizes
 	CalculateBlockGridSize(block, grid);
 
-    CreateTextureCoordsKernel<<< grid, block>>>(dptr, width, height);
+    CreateTextureCoordsKernel<<< grid, block>>>(dptr, width / tileWidth, height / tileHeight,
+		tileWidth, tileHeight);
 	cudaDeviceSynchronize();  //Wait for CUDA kernel to Complete
 
 	cudaGraphicsUnmapResources(1, &resTextureCoords, 0);
@@ -665,6 +751,8 @@ Mesh::Mesh(void)
 	numNormalPositions = 0;
 	resNormalPositions = NULL;
 
+	resControlPoints = NULL;
+
 	Ka = vec3(0.1f);
 	Kd = vec3(0.9f);
 	Ks = vec3(0.4f);
@@ -691,6 +779,24 @@ Mesh::~Mesh(void)
 	//CUDA Unmap?
 }
 
+void Mesh::BufferControlPoints(std::vector<glm::vec3> & controlPoints)
+{
+	assert( controlPoints.size() <= MESH_MAX_CONTROL_POINTS );
+
+	if(resControlPoints == NULL)
+	{
+		//Allocate memory buffer for control points on GPU
+		size_t bytesControlPoints = MESH_MAX_CONTROL_POINTS * sizeof(vec3);
+		assert( cudaMalloc(&resControlPoints, bytesControlPoints) == cudaSuccess );
+		cudaMemset(resControlPoints, 0, bytesControlPoints);	//Zero buffer
+	}
+
+	//Copy controlPoints to GPU buffer
+	size_t bytesToCopy = controlPoints.size() * sizeof(vec3);
+	assert(cudaSuccess ==
+		cudaMemcpy(resControlPoints, &controlPoints[0], bytesToCopy, cudaMemcpyHostToDevice)
+	);
+}
 
 
 void Mesh::Initialize(int width, int height)
@@ -744,8 +850,6 @@ void Mesh::Initialize(int width, int height)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-
-
 //Create Indices VBO
 	glGenBuffers(1, &vboIndices);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vboIndices);
@@ -784,24 +888,6 @@ void Mesh::Initialize(int width, int height)
 //Unbind array buffer and vao
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
-	
-	//Create basic planar mesh and indices
-	//CreatePlanarMesh(width, height);
-	//CreateSphereMesh();
-	/*vec3 v1 = vec3(1.0f, 0.0f, -2.0f);
-	vec3 v2 = vec3(0.0f, 0.5f, -1.0f);
-	vec3 v3 = vec3(0.0f, 1.0f, 1.0f);
-	vec3 v4 = vec3(1.0f, 1.5f, 2.0f);
-	CreateRibbon(v1,v2,v3,v4);
-
-	CreateIndices();
-	CreateWireframeIndices();
-
-	//some test fucntions:
-	CalculateNormals();
-	CreateNormalsVisualization();
-	CreateTextureCoords();*/
 }
 
 void Mesh::Draw(GLSLProgram & shader)

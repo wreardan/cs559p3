@@ -17,10 +17,13 @@ using namespace glm;
 #include "Window.h"
 #include "Cam.h"
 #include "SceneSolarSystem.h"
+#include "SceneObjectViewer.h"
 #include "PostProcessing.h"
 Window window;
-SceneSolarSystem scene;
 PostProcessing postProcess;
+
+SceneObjectViewer scene1;
+SceneSolarSystem scene;
 
 void DisplayFunc()
 {
@@ -57,9 +60,6 @@ void DisplayFunc()
 	glutSwapBuffers();
 }
 
-
-//TESTING END
-
 void ResizeFunc(int width, int height)
 {
 	scene.Resize(ivec2(width, height));
@@ -73,26 +73,22 @@ void KeyboardFunc(unsigned char key, int x, int y) {
 	case 'O':
 		postProcess.ChangeEffect();
 		break;
+	default:
+		scene.Keyboard(key, ivec2(x, y));
 	}
-
-	scene.Keyboard(key, ivec2(x, y));
-
 }
 
-
-
-//Mouse
-void mouse(int button, int state, int x, int y) {
+void MouseFunc(int button, int state, int x, int y) {
 	scene.Mouse(button, state, ivec2(x, y));
 }
-void motion(int x, int y) {
+void MotionFunc(int x, int y) {
 	scene.Motion(ivec2(x, y));
 }
 void SpecialFunc(int c, int x, int y)
 {
 	scene.Special(c, ivec2(x, y));
 }
-void Close()
+void CloseFunc()
 {
 
 }
@@ -110,11 +106,11 @@ bool Initialize(int argc, char* argv[])
 	glutDisplayFunc(DisplayFunc);
 	glutKeyboardFunc(KeyboardFunc);
 
-	glutMouseFunc(mouse);
-	glutMotionFunc(motion);
+	glutMouseFunc(MouseFunc);
+	glutMotionFunc(MotionFunc);
 	glutSpecialFunc(SpecialFunc);
 	glutReshapeFunc(ResizeFunc);
-	glutCloseFunc(Close);
+	glutCloseFunc(CloseFunc);
 	glutSetOption(GLUT_ACTION_ON_WINDOW_CLOSE, GLUT_ACTION_CONTINUE_EXECUTION);
 
 	if(glewInit() != GLEW_OK) {

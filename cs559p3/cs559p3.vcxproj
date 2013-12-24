@@ -175,6 +175,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="Ribbon.cpp" />
     <ClCompile Include="Scene.cpp" />
+    <ClCompile Include="SceneObjectViewer.cpp" />
     <ClCompile Include="SceneSolarSystem.cpp" />
     <ClCompile Include="Time.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -192,6 +193,7 @@ copy "$(CudaToolkitBinDir)\cudart*.dll" "$(OutDir)"</Command>
     <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="Ribbon.h" />
     <ClInclude Include="Scene.h" />
+    <ClInclude Include="SceneObjectViewer.h" />
     <ClInclude Include="SceneSolarSystem.h" />
     <ClInclude Include="Time.h" />
     <ClInclude Include="Window.h" />

@@ -16,6 +16,8 @@
 #define GL_BAD_VALUE ((unsigned)-1)
 #endif
 
+#define MESH_MAX_CONTROL_POINTS 128
+
 class Mesh
 {
 protected:
@@ -43,6 +45,8 @@ protected:
 	GLuint vboNormalPositions;
 	cudaGraphicsResource* resNormalPositions;
 	GLuint numNormalPositions;
+//Control Points
+	glm::vec3* resControlPoints;	//This is a GPU pointer
 //Material Properties (pass these to Fragment Shader)
 	glm::vec3 Ka, Ks, Kd;	//Lambertian Material properties: Ambient, Specular, Diffuse
 	float Shininess;
@@ -58,12 +62,15 @@ public:
 	void CreateSphereMesh();
 	void FixSphereEdgeCases();
 	void CreateRibbon(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4);
+	void CreateFullRibbon(std::vector<glm::vec3> & controlPoints);
 	void CreateStaircase(glm::vec3 v1, glm::vec3 v2, glm::vec3 v3, glm::vec3 v4);
 	void CreateIndices();
 	void CreateWireframeIndices();
 	void CalculateNormals();
 	void CreateNormalsVisualization();
-	void CreateTextureCoords();
+	void CreateTextureCoords(int tileWidth = 1, int tileHeight = 1);
+
+	void BufferControlPoints(std::vector<glm::vec3> & controlPoints);
 
 	void MorphMesh(glm::ivec2 point, float morphRadius, float morphHeight);
 

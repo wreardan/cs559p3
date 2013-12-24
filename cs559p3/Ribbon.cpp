@@ -21,38 +21,73 @@ Ribbon::Ribbon(void)
 	changing = false;
 }
 
-void Ribbon::Initialize(void)
+//void Ribbon::Initialize(void)
+//{
+//	textures.resize(3);
+//	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
+//	textures[1].Initialize("Textures/hardwood_NRM.jpg");
+//	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
+//
+//	for(int i = 1; i < (int)controlPoints.size() - 2; i++)
+//	{
+//		meshes.push_back(Mesh());
+//		Mesh & mesh = meshes[meshes.size() - 1];
+//		mesh.Initialize(16, 16);
+//
+//		vec3 v1 = controlPoints[i - 1];
+//		vec3 v2 = controlPoints[i];
+//		vec3 v3 = controlPoints[i + 1];
+//		vec3 v4 = controlPoints[i + 2];
+//		mesh.CreateRibbon(v1,v2,v3,v4);
+//		//mesh.CreateStaircase(v1,v2,v3,v4);
+//
+//		mesh.CreateIndices();
+//		mesh.CreateWireframeIndices();
+//
+//		mesh.CalculateNormals();
+//		mesh.CreateNormalsVisualization();
+//		mesh.CreateTextureCoords();
+//
+//		mesh.textures.push_back(&textures[0]);
+//		mesh.textures.push_back(&textures[1]);
+//		mesh.textures.push_back(&textures[2]);
+//	}
+//}
+
+void Ribbon::Initialize()
 {
+
+	//Create Mesh
+	meshes.push_back(Mesh());
+	Mesh & mesh = meshes[meshes.size() - 1];
+	int numSegments = (controlPoints.size() - 3);
+	int width = 16;
+	int height = 16 * numSegments;
+	mesh.Initialize(width, height);
+
+	//Buffer ControlPoints, then run the FullRibbonKernel
+	mesh.CreateFullRibbon(controlPoints);
+
+	//Create other stuff inside the Mesh
+	mesh.CreateIndices();
+	mesh.CreateWireframeIndices();
+
+	mesh.CalculateNormals();
+	mesh.CreateNormalsVisualization();
+
+	//Setup Texture stuff
+	mesh.CreateTextureCoords(1, numSegments);
+	
 	textures.resize(3);
 	textures[0].Initialize("Textures/hardwood_COLOR.jpg");
 	textures[1].Initialize("Textures/hardwood_NRM.jpg");
 	textures[2].Initialize("Textures/hardwood_SPEC.jpg");
-
-	for(int i = 1; i < (int)controlPoints.size() - 2; i++)
-	{
-		meshes.push_back(Mesh());
-		Mesh & mesh = meshes[meshes.size() - 1];
-		mesh.Initialize(16, 16);
-
-		vec3 v1 = controlPoints[i - 1];
-		vec3 v2 = controlPoints[i];
-		vec3 v3 = controlPoints[i + 1];
-		vec3 v4 = controlPoints[i + 2];
-		mesh.CreateRibbon(v1,v2,v3,v4);
-		//mesh.CreateStaircase(v1,v2,v3,v4);
-
-		mesh.CreateIndices();
-		mesh.CreateWireframeIndices();
-
-		mesh.CalculateNormals();
-		mesh.CreateNormalsVisualization();
-		mesh.CreateTextureCoords();
-
-		mesh.textures.push_back(&textures[0]);
-		mesh.textures.push_back(&textures[1]);
-		mesh.textures.push_back(&textures[2]);
-	}
+	
+	mesh.textures.push_back(&textures[0]);
+	mesh.textures.push_back(&textures[1]);
+	mesh.textures.push_back(&textures[2]);
 }
+
 
 void Ribbon::CreateCircularRibbonControlPoints(float radius, int numPoints, int mode, float deltaTime)
 {
@@ -87,7 +122,7 @@ glm::vec3 Ribbon::GetCameraPosition(float time)
 {
 	while(time > 1.0f)
 		time -= 1.0f;
-	//assert(time <= 1.0f && time >= 0.0f);
+
 	int size = controlPoints.size() - 2;
 
 	float splineTime = time * size;
@@ -106,14 +141,9 @@ glm::vec3 Ribbon::GetCameraPosition(float time)
 	vec3 v4 = controlPoints[p4location];
 
 	vec3 position = catmullRom(v1, v2, v3, v4, splineTime);
-	//vec3 facing = catmullRom(v1, v2, v3, v4, splineTime + 0.05f);
-	vec3 facing = vec3(0,0,0);
-	vec3 up = vec3(0,1,0);
 
 	return position;
-	//return lookAt(position, facing, up);
 }
-
 
 
 Ribbon::~Ribbon(void)
@@ -123,18 +153,10 @@ void Ribbon::Update(float deltaTime)
 {
 	if(changing)
 	{
-		for(int i = 1; i < (int)controlPoints.size() - 2; i++)
-		{
-			Mesh & mesh = meshes[i - 1];
-
-			vec3 v1 = controlPoints[i - 1];
-			vec3 v2 = controlPoints[i];
-			vec3 v3 = controlPoints[i + 1];
-			vec3 v4 = controlPoints[i + 2];
-			mesh.CreateRibbon(v1,v2,v3,v4);
-			//mesh.CalculateNormals();
-			//mesh.CreateNormalsVisualization();
-		}
+		Mesh & mesh = meshes[0];
+		mesh.CreateFullRibbon(controlPoints);
+		mesh.CalculateNormals();
+		mesh.CreateNormalsVisualization();
 	}
 
 	super::Update(deltaTime);

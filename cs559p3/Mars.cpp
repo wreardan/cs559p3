@@ -30,7 +30,8 @@ void Mars::Initialize(float radius, float orbitRadius, float orbitSpeed, float r
 
 	meshes.push_back(Mesh());
 	Mesh & mesh = meshes[meshes.size() - 1];
-	mesh.Initialize(1440, 720);
+	//mesh.Initialize(1440, 720);
+	mesh.Initialize(360, 180);
 
 	mesh.CreateSphereMesh();
 

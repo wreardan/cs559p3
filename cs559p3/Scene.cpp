@@ -72,7 +72,46 @@ void Scene::Resize(glm::ivec2 windowSize)
 
 void Scene::Keyboard(unsigned char key, glm::ivec2 point)
 {
-
+	switch(key) {
+	case 'w':
+	case 'W':
+		camera.MoveForward();
+		break;
+	case 's':
+	case 'S':
+		camera.MoveBackward();
+		break;
+	case 'a':
+	case 'A':
+		camera.MoveLeft();
+		break;
+	case 'd':
+	case 'D':
+		camera.MoveRight();
+		break;
+	case 'q':
+	case 'Q':
+		camera.MoveUp();
+		break;
+	case 'e':
+	case 'E':
+		camera.MoveDown();
+		break;
+	case 'p':
+	case 'P':
+		if(timer.mStopped) {
+			timer.Start();
+		}else {
+			timer.Stop();
+		}
+		break;
+	case 27:   //escape
+		glutLeaveMainLoop();
+		break;
+	default:
+		std::cout << "unhandled keyboard key: " << key << std::endl;
+		break;
+	}
 }
 
 void Scene::Special(int c, glm::ivec2 point)
